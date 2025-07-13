@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pydantic
+requests
+beautifulsoup4
+lxml
+python-dotenv
+apscheduler
+email-validator
+passlib[bcrypt]
+python-jose[cryptography]
+fastapi-jwt-auth
+python-multipart

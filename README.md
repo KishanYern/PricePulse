@@ -30,25 +30,6 @@ Track product prices on Amazon and eBay, store price history, and get email aler
 
 ---
 
-## 📁 Project Structure
-
-price-tracker-api/
-├── app/
-│   ├── main.py              # FastAPI app
-│   ├── models.py            # SQLAlchemy models
-│   ├── schemas.py           # Pydantic schemas
-│   ├── scraper.py           # Scraper logic
-│   ├── scheduler.py         # Hourly job logic
-│   ├── routes/products.py   # REST API routes
-│   └── utils/email.py       # Email alert sender
-├── tests/                   # Test cases
-├── requirements.txt
-├── Dockerfile
-├── .env
-└── README.md
-
----
-
 ## ⚙️ Setup Instructions
 
 ### 1. Clone the repo
