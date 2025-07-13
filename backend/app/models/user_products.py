@@ -19,8 +19,8 @@ class UserProduct(Base):
     upper_threshold: Mapped[float] = mapped_column(nullable=True)
 
     # Relationships
-    product = relationship(back_populates="user_products")
-    user = relationship(back_populates="user_products")
+    product = relationship("Product", back_populates="user_products")
+    user = relationship("User", back_populates="user_products")
 
     def __repr__(self):
         return f"<Alert(id={self.id}, product_id={self.product_id}, user_id={self.user_id})>"

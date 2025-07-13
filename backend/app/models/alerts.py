@@ -22,8 +22,8 @@ class Alert(Base):
     )
 
     # Relationships
-    product = relationship(back_populates="alerts")
-    user = relationship(back_populates="alerts")
+    product = relationship("Product", back_populates="alerts")
+    user = relationship("User", back_populates="alerts")
 
     def __repr__(self):
         return f"<Alert(id={self.id}, product_id={self.product_id}, user_id={self.user_id}, type={self.alert_type.value if self.alert_type else 'None'})>"

@@ -1,1 +1,6 @@
+# Backend env
 backend/.env
+
+# Backend pycache
+backend/app/__pycache__
+backend/app/models/__pycache__
