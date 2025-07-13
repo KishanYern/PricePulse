@@ -106,3 +106,6 @@ pytest
 | GET    | `/products/{id}/history` | View price history       |
 | POST   | `/alerts`                | Create a price alert     |
 
+
+
+-- Created with ChatGPT (given the outline of the project) for now.
