@@ -1,7 +1,6 @@
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
 
 from app.database import Base
 
@@ -34,12 +33,10 @@ def tables(engine):
     """
     Create and drop all tables in the test database
     """
-    print("\nCreating database tables...")
-    # Base.metadata.create_all will discover all models inheriting from Base
-    # that have been imported or defined in the current scope (via app.models import).
+    print("\nCreating database tables.")
     Base.metadata.create_all(engine)
     yield
-    print("Dropping database tables...")
+    print("Dropping database tables.")
     Base.metadata.drop_all(engine)
 
 @pytest.fixture(scope="function")
@@ -55,6 +52,4 @@ def test_db(engine, tables):
     try:
         yield db
     finally:
-        transaction.rollback() # Rollback the transaction to clean up after each test
-        connection.close()
         db.close()

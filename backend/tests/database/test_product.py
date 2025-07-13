@@ -200,7 +200,6 @@ def test_cascade_delete(test_db):
     # The user should still exist as Product does not have a relationship to delete the User
     assert test_db.query(User).filter_by(id=user_id).first() is not None
 
-
 def test_default_timestamps(test_db):
     """
     Test that created_at and last_checked are automatically populated on creation.
