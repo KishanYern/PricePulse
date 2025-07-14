@@ -1,7 +1,7 @@
-# tests/databasetest/products.py
 import pytest
 from sqlalchemy.exc import IntegrityError
-from datetime import datetime, timedelta
+from datetime import datetime
+import uuid
 
 from app.models import Product, PriceHistory, Alert, UserProduct, User
 
@@ -11,7 +11,7 @@ def test_create_product(test_db):
     """
     product_data = {
         "name": "Test Product 1",
-        "url": "www.testurl_product1.com",
+       "url": f"http://example.com/product2-{uuid.uuid4()}",
         "current_price": 99.99,
         "lowest_price": 50.99,
         "highest_price": 99.99,
@@ -44,7 +44,7 @@ def test_read_product(test_db):
     """
     product_data = {
         "name": "Test Product 2",
-        "url": "http://example.com/product2",
+        "url": f"http://example.com/product2-{uuid.uuid4()}",
         "current_price": 150.00
     }
     product = Product(**product_data)
@@ -52,6 +52,7 @@ def test_read_product(test_db):
     test_db.commit()
     test_db.refresh(product)
 
+    # Check the values
     retrieved_product = test_db.query(Product).filter(Product.id == product.id).first()
     assert retrieved_product is not None
     assert retrieved_product.name == product_data["name"]
@@ -66,7 +67,7 @@ def test_update_product(test_db):
     """
     product = Product(
         name="Old Name",
-        url="http://example.com/old_url",
+        url=f"http://example.com/old_url-{uuid.uuid4()}",
         current_price=10.00
     )
     test_db.add(product)
@@ -91,7 +92,7 @@ def test_delete_product(test_db):
     """
     product = Product(
         name="Product to Delete",
-        url="http://example.com/to_delete",
+        url=f"http://example.com/to_delete-{uuid.uuid4()}",
         current_price=50.00
     )
     test_db.add(product)
@@ -110,9 +111,11 @@ def test_unique_url_constraint(test_db):
     """
     Test that the 'url' field enforces a unique constraint.
     """
+
+    base_url = f"http://example.com/shared_url_test-{uuid.uuid4()}"
     product1 = Product(
         name="Product A",
-        url="http://example.com/shared_url",
+        url=base_url,
         current_price=100.00
     )
     test_db.add(product1)
@@ -121,7 +124,7 @@ def test_unique_url_constraint(test_db):
 
     product2 = Product(
         name="Product B",
-        url="http://example.com/shared_url", # Duplicate URL
+        url=base_url, # Duplicate URL
         current_price=200.00
     )
     test_db.add(product2)
@@ -136,7 +139,7 @@ def test_nullable_fields(test_db):
     """
     product = Product(
         name="Product with Nulls",
-        url="http://example.com/null_prices",
+        url=f"http://example.com/null_prices-{uuid.uuid4()}",
         current_price=75.00
     )
     test_db.add(product)
@@ -153,7 +156,7 @@ def test_cascade_delete(test_db):
     # Create a product
     product = Product(
         name="Product for Cascade Test",
-        url="http://example.com/cascade",
+        url=f"http://example.com/cascade-{uuid.uuid4()}",
         current_price=100.00
     )
     test_db.add(product)
@@ -163,7 +166,7 @@ def test_cascade_delete(test_db):
     product_id = product.id
 
     # Create a user, as Alert and UserProduct depend on it
-    user = User(email="test@example.com", password="hashedpassword")
+    user = User(email=f"test_user_{uuid.uuid4()}@example.com", password="hashedpassword")
     test_db.add(user)
     test_db.commit()
     test_db.refresh(user)
@@ -206,7 +209,7 @@ def test_default_timestamps(test_db):
     """
     product = Product(
         name="Timestamp Test",
-        url="http://example.com/timestamps",
+        url=f"http://example.com/timestamps-{uuid.uuid4()}",
         current_price=123.45
     )
     test_db.add(product)
