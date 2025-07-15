@@ -5,4 +5,4 @@ backend/.env
 backend/app/__pycache__
 backend/app/models/__pycache__
 backend/tests/__pycache__
-backend/tests/database/__pycache__
+backend/tests/database_tests/__pycache__
