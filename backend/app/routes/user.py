@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import User
@@ -35,7 +35,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="There is no user with this ID")
     return user
 
-@router.post("/create", response_model=UserOut)
+@router.post("/create", status_code=status.HTTP_201_CREATED,  response_model=UserOut)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """
     Create a new user.

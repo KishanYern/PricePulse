@@ -18,7 +18,7 @@ def test_create_user():
     response = client.post("/users/create", json=user_data)
 
     # Validate the response
-    assert response.status_code == 200
+    assert response.status_code == 201
     user = response.json()
     validated_user = UserOut(**user)
     assert isinstance(validated_user, UserOut)
@@ -57,7 +57,7 @@ def test_get_user():
 
     # First we create a user
     create_user_response = client.post("/users/create", json=user_data)
-    assert create_user_response.status_code == 200
+    assert create_user_response.status_code == 201
     created_user = create_user_response.json()
     user_id = created_user['id']
 
@@ -90,7 +90,7 @@ def test_update_user():
 
     # Create a user
     create_user_response = client.post("/users/create", json=user_data)
-    assert create_user_response.status_code == 200
+    assert create_user_response.status_code == 201
     created_user = create_user_response.json()
     user_id = created_user['id']
 
@@ -125,7 +125,7 @@ def test_delete_user():
 
     # Create a user
     create_user_response = client.post("/users/create", json=user_data)
-    assert create_user_response.status_code == 200
+    assert create_user_response.status_code == 201
     created_user = create_user_response.json()
     user_id = created_user['id']
 
@@ -150,7 +150,7 @@ def test_create_user_with_existing_email():
 
     # Create the first user
     create_user_response = client.post("/users/create", json=user_data)
-    assert create_user_response.status_code == 200
+    assert create_user_response.status_code == 201
 
     # Attempt to create a second user with the same email
     duplicate_response = client.post("/users/create", json=user_data)
@@ -175,7 +175,7 @@ def test_login_user():
 
     # Create a user
     create_user_response = client.post("/users/create", json=user_data)
-    assert create_user_response.status_code == 200
+    assert create_user_response.status_code == 201
     created_user = create_user_response.json()
 
     # Log in with the user's credentials
