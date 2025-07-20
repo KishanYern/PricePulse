@@ -1,64 +1,71 @@
+# conftest.py
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
+import os
 
-from app.database import Base, get_db
+# Import necessary functions from app.database
+from app.database import Base, get_db, set_test_database, reset_database_globals 
 from app.main import app
 
-# Importing all the models
-from app.models import Product, Alert, PriceHistory, UserProduct, User
+os.environ["APP_ENV"] = "test" # Set the environment to test
 
-# We will use an in-memory SQLite database for testing to avoid overuse in dev environment
+# We will use an in-memory SQLite database for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 @pytest.fixture(scope="session")
 def engine():
     """
-    Create an SQL Test environment
+    Create an in-memory SQLite engine for the test session.
     """
-    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+    test_engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 
     # This event listener ensures PRAGMA foreign_keys = ON is executed for every new connection.
-    # We need this listener to verify that the CASCADE DELETE property is working for foreign keys
-    @event.listens_for(engine, "connect")
+    @event.listens_for(test_engine, "connect")
     def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
 
-    return engine
+    # Crucial step: Set the application's global database engine to the test engine
+    set_test_database(test_engine)
 
-@pytest.fixture(scope="session")
-def tables(engine):
-    """
-    Create and drop all tables in the test database
-    """
+    # Create all tables on the test engine once for the session
     print("\nCreating database tables.")
-    Base.metadata.create_all(engine)
-    yield
+    Base.metadata.create_all(test_engine)
+    
+    yield test_engine
+
+    # Drop all tables after the test session is complete
     print("Dropping database tables.")
-    Base.metadata.drop_all(engine)
+    Base.metadata.drop_all(test_engine)
+    
+    # Reset the global engine and sessionmaker in app.database
+    reset_database_globals()
+
 
 @pytest.fixture(scope="function")
-def test_db(engine, tables):
+def test_db(engine): # This fixture depends on 'engine' which sets up the global test database
     """
     Provides a database session for each test instance. This will isolate test tasks and prevent contamination.
     """
+    # The SessionLocal from app.database is now bound to the 'engine' provided by the 'engine' fixture
+    # So, we can directly use app.database.get_session_local()
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     connection = engine.connect()
     transaction = connection.begin()
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=connection)
-    db = SessionLocal()
+    db = SessionLocal(bind=connection) # Bind the session to the specific connection for transaction control
 
     try:
         yield db
     finally:
         db.close()
         # Only rollback if the transaction is still active. 
-        # When an Integrity test fails, SQLAlchemy will automatically rollback the transaction so we dont have to do it manually.
         if transaction.is_active:
             transaction.rollback()
         connection.close()
+
 
 @pytest.fixture(scope="function")
 def test_client(test_db):
@@ -68,11 +75,11 @@ def test_client(test_db):
     """
     def override_get_db():
         try:
-            yield test_db
+            yield test_db # Yield the session from the test_db fixture
         finally:
-            pass  # test_db fixture handles cleanup
+            pass # The test_db fixture handles session cleanup
     
-    # Override the dependency
+    # Override the dependency for the duration of this test function
     app.dependency_overrides[get_db] = override_get_db
     
     # Create test client
@@ -80,5 +87,5 @@ def test_client(test_db):
     
     yield client
     
-    # Clean up
+    # Clean up: clear dependency overrides after the test
     app.dependency_overrides.clear()

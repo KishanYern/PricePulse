@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
+from app.database import get_db
 from app.models import User
 from app.schemas.user import UserCreate, UserOut
 from app.utils import hash_password
@@ -9,13 +9,6 @@ router = APIRouter(
     prefix="/users",
     tags=["users"],
 )
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @router.get("/", response_model=list[UserOut])
 def get_all_users(db: Session = Depends(get_db)):

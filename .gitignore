@@ -11,3 +11,6 @@ backend/app/routes/__pycache__
 backend/app/schemas/__pycache__
 backend/.pytest_cache
 backend/app/scraper/__pycache__
+
+# VSCode settings
+.vscode
