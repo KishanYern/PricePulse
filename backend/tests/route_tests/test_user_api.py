@@ -17,8 +17,8 @@ def test_create_user(test_client):
     user = response.json()
     validated_user = UserOut(**user)
     assert isinstance(validated_user, UserOut)
-    assert validated_user.email == user_data["email"]
     assert validated_user.id is not None
+    assert validated_user.email == user_data["email"]
 
 def test_get_all_users(test_client):
     """
