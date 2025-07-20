@@ -1,4 +1,5 @@
 from pydantic import BaseModel, HttpUrl, ConfigDict
+from datetime import datetime
 
 # Schema for creating a product (will be taken from frontend)
 class ProductCreate(BaseModel):
@@ -13,7 +14,7 @@ class ProductOut(BaseModel):
     current_price: float
     lowest_price: float | None = None
     highest_price: float | None = None
-    created_at: str
-    last_checked: str
+    created_at: datetime
+    last_checked: datetime
 
     model_config = ConfigDict(from_attributes=True)
