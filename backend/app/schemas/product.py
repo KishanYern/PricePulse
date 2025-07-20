@@ -4,6 +4,7 @@ from datetime import datetime
 # Schema for creating a product (will be taken from frontend)
 class ProductCreate(BaseModel):
     url: HttpUrl
+    source: str | None = None
 
 
 # Schema for returning product info (will be given from backend)

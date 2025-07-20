@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
-from app.models import Product
+from app.models import Product, PriceHistory
 from app.schemas.product import ProductCreate, ProductOut
 from app.scraper.product_scraper import scrape_product_data
 from datetime import datetime, timezone
@@ -45,7 +45,7 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     Product details are scraped from the provided URL before saving.
     """
     # Check if product with the same URL already exists
-    existing_product = db.query(Product).filter(Product.url == product.url).first()
+    existing_product = db.query(Product).filter(Product.url == str(product.url)).first()
     if existing_product:
         raise HTTPException(status_code=400, detail="Product with this URL already exists")
     
@@ -65,7 +65,17 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
         created_at=now,
         last_checked=now
     )
+
+    # Add the new product's price history
+    price_history = PriceHistory(
+        product_id=new_product.id,
+        price=scraped_data["current_price"],
+        timestamp=now,
+        source=product.source if product.source else None
+    )
+
     db.add(new_product)
+    db.add(price_history)
     db.commit()
     db.refresh(new_product)
     return new_product
@@ -94,6 +104,16 @@ def update_product(product_id: int, product: ProductCreate, db: Session = Depend
     existing_product.highest_price = scraped_data["highest_price"]
     existing_product.last_checked = datetime.now(timezone.utc)
 
+    # Update the price history
+    price_history = PriceHistory(
+        product_id=existing_product.id,
+        price=scraped_data["current_price"],
+        timestamp=datetime.now(timezone.utc),
+        source=product.source if product.source else None
+    )
+
+    db.add(price_history)
+    db.merge(existing_product)
     db.commit()
     db.refresh(existing_product)
     return existing_product
