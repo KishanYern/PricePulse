@@ -98,7 +98,7 @@ def login_user(user: UserCreate, db: Session = Depends(get_db)):
     
     # Check password
     if not db_user.verify_password(user.password):
-        raise HTTPException(status_code=400, detail="Incorrect password")
+        raise HTTPException(status_code=400, detail="Invalid credentials")
     
     # Update last login time
     from datetime import datetime, timezone
