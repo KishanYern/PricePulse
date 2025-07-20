@@ -1,4 +1,4 @@
-fastapi
+fastapi[standard]
 uvicorn[standard]
 sqlalchemy
 psycopg2-binary
@@ -13,3 +13,4 @@ passlib[bcrypt]
 python-jose[cryptography]
 fastapi-jwt-auth
 python-multipart
+bcrypt
