@@ -1,13 +1,36 @@
-from fastapi import FastAPI
-from app.database import Base, engine, SessionLocal
+import os
+from fastapi import FastAPI, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+import contextlib # Import contextlib for lifespan management
+
+from app.database import Base, get_db, get_engine, get_session_local
+
+from app import models
 from app.routes import user, product
 
-# Import all the models
-from app import models
+# Define the lifespan context manager
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan event handler for application startup and shutdown.
+    Handles database table creation based on the environment.
+    """
+    # Startup events
+    if os.getenv("APP_ENV") != "test":
+        print("Creating database tables for application startup...")
+        engine = get_engine()
+        Base.metadata.create_all(bind=engine)
+        print("Tables created.")
+    else:
+        print("Skipping database table creation during test environment startup (handled by pytest fixtures).")
 
-app = FastAPI()
+    yield 
+
+    print("Application shutdown complete.")
+
+# Pass the lifespan context manager to the FastAPI app
+app = FastAPI(lifespan=lifespan)
 
 # User routes
 app.include_router(user.router)
@@ -20,17 +43,19 @@ def root():
     return {'message': 'API Testing!'}
 
 @app.get('/test-db')
-def test_db():
+def test_db(db: Session = Depends(get_db)):
     """
-    Testing to see if the database connection works
+    Testing to see if the database connection works.
     """
-    db: Session = SessionLocal()
     result = db.execute(text('SELECT 1')).fetchone()
     return {"db connection": (result is not None and result[0] == 1)}
 
 if __name__ == "__main__":
-    # Create the database tables
-    print("Creating database tables...")
-    Base.metadata.create_all(bind=engine)
-    print("Tables created.")
-
+    # When using `uvicorn`, the `lifespan` function handles database creation.
+    if os.getenv("APP_ENV") != "test":
+        print("Running main.py directly: Ensuring database tables exist...")
+        engine = get_engine()
+        Base.metadata.create_all(bind=engine)
+        print("Tables created for direct run.")
+    else:
+        print("Running main.py directly in test environment. Table creation handled by pytest.")
