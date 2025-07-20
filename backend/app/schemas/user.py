@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 # Schema for creating a user (will be taken from frontend)
 class UserCreate(BaseModel):
@@ -10,6 +10,5 @@ class UserOut(BaseModel):
     id: int
     email: EmailStr
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
