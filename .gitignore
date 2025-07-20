@@ -10,3 +10,4 @@ backend/tests/route_tests/__pycache__
 backend/app/routes/__pycache__
 backend/app/schemas/__pycache__
 backend/.pytest_cache
+backend/app/scraper/__pycache__

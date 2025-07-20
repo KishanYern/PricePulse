@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from app.database import Base, engine, SessionLocal
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from app.routes import user
+from app.routes import user, product
 
 # Import all the models
 from app import models
@@ -11,6 +11,9 @@ app = FastAPI()
 
 # User routes
 app.include_router(user.router)
+
+# Product routes
+app.include_router(product.router)
 
 @app.get('/')
 def root():
