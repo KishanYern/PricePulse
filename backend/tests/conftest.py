@@ -1,8 +1,10 @@
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
+from fastapi.testclient import TestClient
 
-from app.database import Base
+from app.database import Base, get_db
+from app.main import app
 
 # Importing all the models
 from app.models import Product, Alert, PriceHistory, UserProduct, User
@@ -24,7 +26,6 @@ def engine():
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
-    # ---------------------------------------------
 
     return engine
 
@@ -53,3 +54,31 @@ def test_db(engine, tables):
         yield db
     finally:
         db.close()
+        # Only rollback if the transaction is still active. 
+        # When an Integrity test fails, SQLAlchemy will automatically rollback the transaction so we dont have to do it manually.
+        if transaction.is_active:
+            transaction.rollback()
+        connection.close()
+
+@pytest.fixture(scope="function")
+def test_client(test_db):
+    """
+    Create a test client with dependency override to use the test database.
+    This fixture can be reused across all API test files.
+    """
+    def override_get_db():
+        try:
+            yield test_db
+        finally:
+            pass  # test_db fixture handles cleanup
+    
+    # Override the dependency
+    app.dependency_overrides[get_db] = override_get_db
+    
+    # Create test client
+    client = TestClient(app)
+    
+    yield client
+    
+    # Clean up
+    app.dependency_overrides.clear()

@@ -1,13 +1,8 @@
 import pytest
 import uuid
-from app.main import app
 from app.schemas.user import UserOut
-from fastapi.testclient import TestClient
 
-# Test client for FastAPI
-client = TestClient(app)
-
-def test_create_user():
+def test_create_user(test_client):
     """
     Test the create_user endpoint.
     """
@@ -15,7 +10,7 @@ def test_create_user():
         "email": f"test_user_{uuid.uuid4()}@example.com",
         "password": "securepassword123"
     }
-    response = client.post("/users/create", json=user_data)
+    response = test_client.post("/users/create", json=user_data)
 
     # Validate the response
     assert response.status_code == 201
@@ -25,15 +20,11 @@ def test_create_user():
     assert validated_user.email == user_data["email"]
     assert validated_user.id is not None
 
-    # Delete the user after test
-    delete_response = client.delete(f"/users/{validated_user.id}")
-    assert delete_response.status_code == 200
-
-def test_get_all_users():
+def test_get_all_users(test_client):
     """
     Test the get_all_users endpoint.
     """
-    response = client.get("/users/")
+    response = test_client.get("/users/")
     assert response.status_code == 200
     users = response.json()
 
@@ -45,7 +36,7 @@ def test_get_all_users():
         assert validated_user.id is not None
         assert validated_user.email is not None
 
-def test_get_user():
+def test_get_user(test_client):
     """
     Test the get_user endpoint. 
     First we create a user, then attempt to retrieve that user_id
@@ -56,13 +47,13 @@ def test_get_user():
     }
 
     # First we create a user
-    create_user_response = client.post("/users/create", json=user_data)
+    create_user_response = test_client.post("/users/create", json=user_data)
     assert create_user_response.status_code == 201
     created_user = create_user_response.json()
     user_id = created_user['id']
 
     # Now we retrieve the user by ID
-    get_user_response = client.get(f"/users/{user_id}")
+    get_user_response = test_client.get(f"/users/{user_id}")
     assert get_user_response.status_code == 200
     user = get_user_response.json()
 
@@ -74,11 +65,7 @@ def test_get_user():
     assert validated_user.id == user_id
     assert validated_user.email == user_data["email"]
 
-    # Delete the user after test
-    delete_response = client.delete(f"/users/{validated_user.id}")
-    assert delete_response.status_code == 200
-
-def test_update_user():
+def test_update_user(test_client):
     """
     Test the update_user endpoint.
     First we create a user, then update that user's email and password.
@@ -89,7 +76,7 @@ def test_update_user():
     }
 
     # Create a user
-    create_user_response = client.post("/users/create", json=user_data)
+    create_user_response = test_client.post("/users/create", json=user_data)
     assert create_user_response.status_code == 201
     created_user = create_user_response.json()
     user_id = created_user['id']
@@ -99,7 +86,7 @@ def test_update_user():
         "email": f"updated_user_{uuid.uuid4()}@example.com",
         "password": "newsecurepassword"
     }
-    update_response = client.put(f"/users/{user_id}", json=updated_data)
+    update_response = test_client.put(f"/users/{user_id}", json=updated_data)
     assert update_response.status_code == 200
     updated_user = update_response.json()
 
@@ -109,11 +96,7 @@ def test_update_user():
     assert validated_user.id == user_id
     assert validated_user.email == updated_data["email"]
 
-    # Delete the user after test
-    delete_response = client.delete(f"/users/{validated_user.id}")
-    assert delete_response.status_code == 200
-
-def test_delete_user():
+def test_delete_user(test_client):
     """
     Test the delete_user endpoint.
     First we create a user, then delete that user by ID.
@@ -124,22 +107,22 @@ def test_delete_user():
     }
 
     # Create a user
-    create_user_response = client.post("/users/create", json=user_data)
+    create_user_response = test_client.post("/users/create", json=user_data)
     assert create_user_response.status_code == 201
     created_user = create_user_response.json()
     user_id = created_user['id']
 
     # Delete the user
-    delete_response = client.delete(f"/users/{user_id}")
+    delete_response = test_client.delete(f"/users/{user_id}")
     assert delete_response.status_code == 200
     assert delete_response.json() == {"message": "User deleted successfully"}
 
     # Attempt to retrieve the deleted user
-    get_user_response = client.get(f"/users/{user_id}")
+    get_user_response = test_client.get(f"/users/{user_id}")
     assert get_user_response.status_code == 404
     assert get_user_response.json() == {"detail": "There is no user with this ID"}
 
-def test_create_user_with_existing_email():
+def test_create_user_with_existing_email(test_client):
     """
     Test creating a user with an email that already exists.
     """
@@ -149,21 +132,15 @@ def test_create_user_with_existing_email():
     }
 
     # Create the first user
-    create_user_response = client.post("/users/create", json=user_data)
+    create_user_response = test_client.post("/users/create", json=user_data)
     assert create_user_response.status_code == 201
 
     # Attempt to create a second user with the same email
-    duplicate_response = client.post("/users/create", json=user_data)
+    duplicate_response = test_client.post("/users/create", json=user_data)
     assert duplicate_response.status_code == 400
     assert duplicate_response.json() == {"detail": "Email already registered"}
 
-    # Clean up by deleting the first user
-    created_user = create_user_response.json()
-    delete_response = client.delete(f"/users/{created_user['id']}")
-    assert delete_response.status_code == 200
-    assert delete_response.json() == {"message": "User deleted successfully"}
-
-def test_login_user():
+def test_login_user(test_client):
     """
     Test the login_user endpoint.
     First we create a user, then attempt to log in with that user's credentials.
@@ -174,12 +151,12 @@ def test_login_user():
     }
 
     # Create a user
-    create_user_response = client.post("/users/create", json=user_data)
+    create_user_response = test_client.post("/users/create", json=user_data)
     assert create_user_response.status_code == 201
     created_user = create_user_response.json()
 
     # Log in with the user's credentials
-    login_response = client.post("/users/login", json={
+    login_response = test_client.post("/users/login", json={
         "email": user_data["email"],
         "password": user_data["password"]
     })
@@ -193,14 +170,10 @@ def test_login_user():
     assert validated_user.email == user_data["email"]
 
     # Try to log in with incorrect credentials
-    incorrect_login_response = client.post("/users/login", json={
+    incorrect_login_response = test_client.post("/users/login", json={
         "email": user_data["email"],
         "password": "wrongpassword"
     })
     assert incorrect_login_response.status_code == 400
     assert incorrect_login_response.json() == {'detail': 'Invalid credentials'}
-
-    # Clean up by deleting the user
-    delete_response = client.delete(f"/users/{validated_user.id}")
-    assert delete_response.status_code == 200
 
