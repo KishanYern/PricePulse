@@ -26,8 +26,8 @@ def scrape_product_data(product_url: str) -> Optional[Dict[str, Any]]:
     options.add_argument('--disable-extensions')
     options.add_argument('--disable-plugins')
     options.add_argument('--disable-images')
-    options.add_argument('--disable-css')  # Don't load CSS
-    options.add_argument('--disable-javascript')  # Don't load JavaScript if not needed
+    options.add_argument('--disable-css') # Don't load CSS
+    options.add_argument('--disable-javascript') # Don't load JavaScript
     options.add_argument('--disable-web-security')
     options.add_argument('--disable-features=ChromeNotifications')
     options.add_argument('--disable-features=VizDisplayCompositor')
@@ -64,8 +64,8 @@ def scrape_product_data(product_url: str) -> Optional[Dict[str, Any]]:
     try:
         # Initialize driver with shorter timeouts
         driver = webdriver.Chrome(options=options)
-        driver.set_page_load_timeout(8)  # Reduced from 10 to 8 seconds
-        driver.implicitly_wait(3)  # Reduced implicit wait
+        driver.set_page_load_timeout(8)  # Set shorter page load timeout
+        driver.implicitly_wait(3)  # Set implicit wait for elements
         
         logger.info(f"Starting to scrape: {product_url}")
         driver.get(product_url)
@@ -101,27 +101,6 @@ def scrape_product_data(product_url: str) -> Optional[Dict[str, Any]]:
         if not product_title:
             logger.warning(f"Could not find product title for {product_url}")
             return None
-        
-        current_price = None
-        # Find the price element span with the css class "aok-offscreen"
-        try:
-            price_element = wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, ".priceToPay"))
-            )
-            product_price = price_element.text.strip()
-            logger.info(f"Found product price: {product_price}")
-        except TimeoutException:
-            logger.warning(f"Could not find product price for {product_url}")
-            return None
-        
-        if current_price is not None:
-            # If we found the price, return it
-            return {
-                "name": product_title,
-                "url": product_url,
-                "current_price": current_price,
-            }
-        logger.warning(f"Could not find current price for {product_url} using .aok-offscreen")
 
         # Try to extract price: Whole and fraction prices
         logger.info("Attempting to scrape product price...")
@@ -184,6 +163,11 @@ def scrape_product_data(product_url: str) -> Optional[Dict[str, Any]]:
         else:
             current_price = current_price_whole + (current_price_fraction / 100)
         
+        # Make the product title more readable if over 50 characters
+        if len(product_title) > 50:
+            product_title = product_title[:50] + "..."
+
+        # Return the scraped data
         return {
             "name": product_title,
             "url": product_url,
