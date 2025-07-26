@@ -1,0 +1,94 @@
+import React, { useState } from "react";
+import axios from "axios";
+import type { Product } from "../types/Product";
+
+interface AddProductProps {
+    onProductAdded: (newProduct: Product) => void;
+}
+
+export const AddProduct = ({ onProductAdded }: AddProductProps) => {
+    const [url, setUrl] = useState("");
+    const [source, setSource] = useState("Amazon");
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+        setSuccess("");
+        try {
+            // Call the server to validate and add the product
+            const response = await axios.post(
+                "http://localhost:8000/products/create",
+                {
+                    url,
+                    source,
+                }
+            );
+
+            if (response.status !== 201) {
+                // checking for errors from the server
+                if (response.status === 400) {
+                    setError(
+                        "Product with this URL already exists or unable to scrape data."
+                    );
+                    console.error(response.data);
+                } else if (response.status === 500) {
+                    setError("Server error. Please try again later.");
+                    console.error(response.data);
+                }
+                setLoading(false);
+            }
+
+            console.log("Product added:", response.data);
+            setUrl("");
+            setSuccess("Product added successfully!");
+            setLoading(false);
+            onProductAdded(response.data); // Notify home page to add the new product to the list.
+        } catch (error) {
+            console.error("Error adding product:", error);
+        }
+    };
+
+    return (
+        <div className='bg-white p-6 rounded-lg shadow-md'>
+            <h2 className='text-lg font-bold mb-4 text-black'>Add Product</h2>
+            <form onSubmit={handleSubmit}>
+                <input
+                    type='text'
+                    placeholder='Enter product URL'
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    required
+                    className='input input-bordered w-full'
+                />
+                <p className='text-sm text-gray-500 mb-4'>
+                    Enter the product URL to track its price.
+                </p>
+                <select
+                    className='select select-bordered w-full'
+                    defaultValue='Amazon'
+                    onChange={(e) => setSource(e.target.value)}
+                >
+                    <option value='Amazon'>Amazon</option>
+                </select>
+                <p className='text-sm text-gray-500 mb-4'>
+                    Select the source of the product.
+                </p>
+                <div className='mb-4'>
+                    {loading ? (
+                        <span className='btn btn-primary loading loading-spinner loading-lg text-primary'></span>
+                    ) : (
+                        <button type='submit' className='btn btn-primary'>
+                            Add Product
+                        </button>
+                    )}
+                </div>
+                {error && <p className='text-red-500'>{error}</p>}
+                {success && <p className='text-green-500'>{success}</p>}
+            </form>
+        </div>
+    );
+};
