@@ -1,6 +1,9 @@
 # Backend env
 backend/.env
 
+# Pytest cache
+.pytest_cache
+
 # Backend pycache
 backend/app/__pycache__
 backend/app/models/__pycache__
