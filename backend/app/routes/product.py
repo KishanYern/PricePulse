@@ -37,6 +37,7 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     Create a new product.
 
     Product details are scraped from the provided URL before saving.
+    This is assuming that the URL given is an Amazon product URL.
     """
     # Check if product with the same URL already exists
     existing_product = db.query(Product).filter(Product.url == str(product.url)).first()
@@ -49,13 +50,14 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Failed to retrieve product details")
 
     # Create new product
+    # Set the highest and lowest prices to the current price initially
     now = datetime.now(timezone.utc)
     new_product = Product(
         name=scraped_data["name"],
         url=scraped_data["url"],
         current_price=scraped_data["current_price"],
-        lowest_price=scraped_data["lowest_price"],
-        highest_price=scraped_data["highest_price"],
+        lowest_price=scraped_data["current_price"],
+        highest_price=scraped_data["current_price"],
         created_at=now,
         last_checked=now
     )
@@ -97,8 +99,10 @@ def update_product(product_id: int, product: ProductCreate, db: Session = Depend
     # Update the product attributes
     existing_product.name = scraped_data["name"]
     existing_product.current_price = scraped_data["current_price"]
-    existing_product.lowest_price = scraped_data["lowest_price"]
-    existing_product.highest_price = scraped_data["highest_price"]
+    if existing_product.lowest_price is None or scraped_data["current_price"] < existing_product.lowest_price:
+        existing_product.lowest_price = scraped_data["current_price"]
+    if existing_product.highest_price is None or scraped_data["current_price"] > existing_product.highest_price:
+        existing_product.highest_price = scraped_data["current_price"]
     existing_product.last_checked = datetime.now(timezone.utc)
 
     # Create a new entry in the price history
