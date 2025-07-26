@@ -5,7 +5,16 @@ from datetime import datetime
 class ProductCreate(BaseModel):
     url: HttpUrl
     source: str | None = None
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
+class UserCreateProduct(BaseModel):
+    user_id: int
+    product: ProductCreate
+    notes: str | None = None
+    notify: bool = True
+    lower_threshold: float | None = None
+    upper_threshold: float | None = None
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 # Schema for returning product info (will be given from backend)
 class ProductOut(BaseModel):

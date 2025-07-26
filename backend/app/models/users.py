@@ -39,10 +39,3 @@ class User(Base):
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email})>"
     
-    def verify_password(self, password: str) -> bool:
-        """
-        Verify the provided password against the stored hashed password.
-        """
-        from app.utils import verify_password
-        return verify_password(password, self.password)
-    

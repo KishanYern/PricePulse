@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import type { Product } from "../types/Product";
 import { AddProduct } from "../components/AddProduct";
+import { useAuth } from "../AuthContext"; // Import the AuthContext
 
 const Home: React.FC = () => {
+    const { isAuthenticated, user, isLoading, logout } = useAuth(); // Get the user from AuthContext
     const [showAddProduct, setShowAddProduct] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
 
@@ -30,6 +32,30 @@ const Home: React.FC = () => {
 
     return (
         <div>
+            {isLoading ? (
+                <div className='flex items-center justify-center min-h-screen'>
+                    <p className='text-white'>Loading...</p>
+                </div>
+            ) : !isAuthenticated ? (
+                <div className='flex items-center justify-center min-h-screen'>
+                    <p className='text-white'>
+                        Please log in to view products.
+                    </p>
+                </div>
+            ) : user ? (
+                <div className='flex items-center justify-between p-4 bg-gradient-to-r from-primary to-secondary'>
+                    <h1 className='text-2xl font-bold text-white'>
+                        Welcome, {user.email}!
+                    </h1>
+                    <button className='btn btn-secondary' onClick={logout}>
+                        Logout
+                    </button>
+                </div>
+            ) : (
+                <div className='flex items-center justify-center min-h-screen'>
+                    <p className='text-white'>Loading user data...</p>
+                </div>
+            )}
             <div className='flex justify-between items-center p-4 bg-gradient-to-r from-primary to-secondary'>
                 <h1 className='text-2xl font-bold text-white'>Price Tracker</h1>
                 <button

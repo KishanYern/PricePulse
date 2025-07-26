@@ -9,6 +9,10 @@ interface AddProductProps {
 export const AddProduct = ({ onProductAdded }: AddProductProps) => {
     const [url, setUrl] = useState("");
     const [source, setSource] = useState("Amazon");
+    const [notes, setNotes] = useState("");
+    const [notify, setNotify] = useState(true);
+    const [lowerThreshold, setLowerThreshold] = useState<number | null>(null);
+    const [upperThreshold, setUpperThreshold] = useState<number | null>(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
@@ -76,6 +80,65 @@ export const AddProduct = ({ onProductAdded }: AddProductProps) => {
                 </select>
                 <p className='text-sm text-gray-500 mb-4'>
                     Select the source of the product.
+                </p>
+                <input
+                    type='text'
+                    placeholder='Additional notes (optional)'
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className='input input-bordered w-full'
+                />
+                <p className='text-sm text-gray-500 mb-4'>
+                    Add any notes or comments about the product.
+                </p>
+                <div className='flex gap-4'>
+                    <input
+                        type='number'
+                        placeholder='Lower Price Threshold (optional)'
+                        value={lowerThreshold ?? ""}
+                        onChange={(e) =>
+                            setLowerThreshold(
+                                e.target.value
+                                    ? parseFloat(e.target.value)
+                                    : null
+                            )
+                        }
+                        className='input input-bordered w-full'
+                    />
+                    <input
+                        type='number'
+                        placeholder='Upper Price Threshold (optional)'
+                        value={upperThreshold ?? ""}
+                        onChange={(e) =>
+                            setUpperThreshold(
+                                e.target.value
+                                    ? parseFloat(e.target.value)
+                                    : null
+                            )
+                        }
+                        className='input input-bordered w-full'
+                    />
+                </div>
+                <p className='text-sm text-gray-500 mb-4'>
+                    Set price thresholds to receive notifications when the price
+                    goes below or above these values.
+                </p>
+                <div className='form-control'>
+                    <label className='label cursor-pointer'>
+                        <span className='label-text text-black'>
+                            Notify me when price changes
+                        </span>
+                        <input
+                            type='checkbox'
+                            checked={notify}
+                            onChange={(e) => setNotify(e.target.checked)}
+                            className='toggle toggle-primary ml-2'
+                        />
+                    </label>
+                </div>
+                <p className='text-sm text-gray-500 mb-4'>
+                    Enable notifications to receive updates when the product
+                    price changes.
                 </p>
                 <div className='mb-4'>
                     {loading ? (
