@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 import contextlib # Import contextlib for lifespan management
@@ -31,6 +32,14 @@ async def lifespan(app: FastAPI):
 
 # Pass the lifespan context manager to the FastAPI app
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # User routes
 app.include_router(user.router)
