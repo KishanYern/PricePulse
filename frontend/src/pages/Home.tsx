@@ -11,11 +11,23 @@ const Home: React.FC = () => {
 
     useEffect(() => {
         const fetchData: () => Promise<void> = async () => {
+            if(!isAuthenticated || !user) {
+                console.error("User is not authenticated or user data is not available.");
+                return;
+            }
             try {
                 const response = await axios.get(
-                    "http://localhost:8000/products/"
+                    `http://localhost:8000/${user.id}/user-products/`,
+                    {
+                        withCredentials: true, // Ensure cookies are sent with the request
+                    }
                 );
                 console.log("Fetched products:", response.data);
+
+                if(!Array.isArray(response.data)) {
+                    console.error("Expected an array of products, but received:", response.data);
+                    return;
+                }
                 setProducts(response.data);
             } catch (error) {
                 console.error("Error fetching data:", error);

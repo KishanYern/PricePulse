@@ -25,10 +25,22 @@ export const AddProduct = ({ onProductAdded }: AddProductProps) => {
         try {
             // Call the server to validate and add the product
             const response = await axios.post(
-                "http://localhost:8000/products/create",
+                "http://localhost:8000/products/create-product",
                 {
-                    url,
-                    source,
+                    "product": {
+                        url,
+                        source
+                    },
+                    "notes": notes,
+                    "notify": notify,
+                    "lowerThreshold": lowerThreshold,
+                    "upperThreshold": upperThreshold
+                },
+                {
+                    withCredentials: true, // Ensure cookies are sent with the request
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                 }
             );
 

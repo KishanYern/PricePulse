@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import Enum
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Product, PriceHistory, UserProduct
+from app.models import Product, PriceHistory, UserProduct, User
 from app.schemas.product import ProductCreate, UserCreateProduct, ProductOut
 from app.schemas.price_history import PriceHistoryOut
 from app.scraper.product_scraper import scrape_product_data
+from app.auth import get_current_user
 from datetime import datetime, timezone
+from enum import Enum
 
 # Create Enum for product status
 class ProductStatus(str, Enum):
@@ -20,7 +21,7 @@ router = APIRouter(
 )
 
 # Helper function to create a product
-def _create_product_internal(product_data: ProductCreate, db: Session) -> Product:
+def _create_product_internal(product_data: ProductCreate, db: Session) -> Product | ProductStatus:
     """
     Internal helper function to create a new product and its initial price history.
     Does not handle user association or HTTP exceptions directly.
@@ -81,14 +82,20 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
     return product
 
 @router.get('/{user_id}/user-products', response_model=list[ProductOut])
-def get_user_products(user_id: int, db: Session = Depends(get_db)):
+def get_user_products(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Retrieve all products associated with a specific user by user ID.
     """
+
+    # Ensure the user is authenticated and has permission to access this data
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="You do not have permission to access this user's products")
+    
+    # Query to get all UserProduct entries for the given user_id
     user_products = db.query(UserProduct).filter(UserProduct.user_id == user_id).all()
     if not user_products:
         raise HTTPException(status_code=404, detail="No products found for this user")
-    
+
     product_ids = [up.product_id for up in user_products]
     
     # Extract product IDs from UserProduct entries
@@ -98,12 +105,13 @@ def get_user_products(user_id: int, db: Session = Depends(get_db)):
     return products
 
 @router.post('/create-product', status_code=status.HTTP_201_CREATED, response_model=ProductOut)
-def create_user_product_endpoint(user_product_data: UserCreateProduct, db: Session = Depends(get_db)):
+def create_product(user_product_data: UserCreateProduct, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Create a new product associated with the authenticated user.
     """
     # Use the current_user's ID, not the one from the request body
-    user_id_to_associate = user_product_data.user_id
+    print(f"Current user ID: {current_user.id}")
+    user_id_to_associate = current_user.id
 
     # Start a transaction to ensure atomicity
     # All database operations within this block will be committed or rolled back together.
@@ -137,14 +145,15 @@ def create_user_product_endpoint(user_product_data: UserCreateProduct, db: Sessi
         # Return a response model that includes user-specific product details
         return ProductOut(
             id=product.id,
+            url=product.url,
             name=product.name,
-            current_price=product.current_price,
-            lowest_price=product.lowest_price,
-            highest_price=product.highest_price,
-            last_checked=product.last_checked,
-            user_product_details=user_product_entry
+            currentPrice=product.current_price,
+            lowestPrice=product.lowest_price,
+            highestPrice=product.highest_price,
+            createdAt=product.created_at,
+            lastChecked=product.last_checked,
         )
-
+    
     except HTTPException:
         # Re-raise HTTPExceptions from previous checks
         db.rollback() # Rollback if an HTTPException occurred before commit
