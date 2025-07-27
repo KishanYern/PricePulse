@@ -57,8 +57,8 @@ export const AddProduct = ({ onProductAdded }: AddProductProps) => {
     };
 
     return (
-        <div className='bg-white p-6 rounded-lg shadow-md'>
-            <h2 className='text-lg font-bold mb-4 text-black'>Add Product</h2>
+        <div className='p-6 rounded-lg shadow-md'>
+            <h2 className='text-lg font-bold mb-4 text-gray-300'>Add Product</h2>
             <form onSubmit={handleSubmit}>
                 <input
                     type='text'
@@ -125,7 +125,7 @@ export const AddProduct = ({ onProductAdded }: AddProductProps) => {
                 </p>
                 <div className='form-control'>
                     <label className='label cursor-pointer'>
-                        <span className='label-text text-black'>
+                        <span className='label-text text-gray-400'>
                             Notify me when price changes
                         </span>
                         <input
