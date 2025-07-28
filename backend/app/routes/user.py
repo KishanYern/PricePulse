@@ -141,7 +141,7 @@ def login_user(
         httponly=True,
         secure=True,
         samesite="Lax",
-        expires=int(access_token_expires.total_seconds()),
+        max_age=int(access_token_expires.total_seconds()),
         path="/",
     )
 
