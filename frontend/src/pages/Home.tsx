@@ -35,7 +35,7 @@ const Home: React.FC = () => {
         };
 
         fetchData();
-    }, []);
+    }, [isAuthenticated, user]);
 
     const handleProductAdded = (newProduct: Product) => {
         // when a new product is added, update the product list.
