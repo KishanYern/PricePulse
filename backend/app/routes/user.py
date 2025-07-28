@@ -73,7 +73,7 @@ def create_user(
         httponly=True,
         secure=True,
         samesite="Lax",
-        expires=int(access_token_expires.total_seconds()),
+        expires=(datetime.now(timezone.utc) + access_token_expires),
         path="/",
     )
 
