@@ -110,7 +110,7 @@ def create_product(user_product_data: UserCreateProduct, db: Session = Depends(g
     Create a new product associated with the authenticated user.
     """
     # Use the current_user's ID, not the one from the request body
-    print(f"Current user ID: {current_user.id}")
+    logging.debug(f"Current user ID: {current_user.id}")
     user_id_to_associate = current_user.id
 
     # Start a transaction to ensure atomicity
