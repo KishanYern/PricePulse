@@ -81,10 +81,14 @@ async def get_current_user(
 
     try:
         payload = decode_access_token(token)
-        user_id: Optional[int] = payload.get("sub")
+        user_id: Optional[str] = payload.get("sub")
         if user_id is None:
             raise credentials_exception
-        token_data = TokenData(id=user_id)
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            raise credentials_exception
+        token_data = TokenData(id=user_id_int)
     except JWTError:
         raise credentials_exception # JWT is invalid/expired
 
