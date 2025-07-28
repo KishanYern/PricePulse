@@ -94,14 +94,12 @@ def get_user_products(user_id: int, db: Session = Depends(get_db), current_user:
     # Query to get all UserProduct entries for the given user_id
     user_products = db.query(UserProduct).filter(UserProduct.user_id == user_id).all()
     if not user_products:
-        raise HTTPException(status_code=404, detail="No products found for this user")
+        return []
 
     product_ids = [up.product_id for up in user_products]
     
     # Extract product IDs from UserProduct entries
     products = db.query(Product).filter(Product.id.in_(product_ids)).all()
-    if not products:
-        raise HTTPException(status_code=404, detail="No products found for this user")
     return products
 
 @router.post('/create-product', status_code=status.HTTP_201_CREATED, response_model=ProductOut)
