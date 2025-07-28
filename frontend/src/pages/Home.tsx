@@ -54,7 +54,7 @@ const Home: React.FC = () => {
                         Please log in to view products.
                     </p>
                 </div>
-            ) : user ? (
+            ) : (
                 <div className='flex items-center justify-between p-4 bg-gradient-to-r from-primary to-secondary'>
                     <h1 className='text-2xl font-bold text-white'>
                         Welcome, {user.email}!
