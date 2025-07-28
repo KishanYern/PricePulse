@@ -28,6 +28,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
 
     to_encode.update({"exp": expire})
+    if SECRET_KEY is None:
+        raise ValueError("SECRET_KEY must not be None")
+    if ALGORITHM is None:
+        raise ValueError("ALGORITHM must not be None")
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -39,12 +43,22 @@ def decode_access_token(token: str) -> dict:
     :raises HTTPException: If the token is invalid or expired.
     """
     try:
+        if SECRET_KEY is None:
+            raise ValueError("SECRET_KEY must not be None")
+        if ALGORITHM is None:
+            raise ValueError("ALGORITHM must not be None")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(ve),
             headers={"WWW-Authenticate": "Bearer"},
         )
 
