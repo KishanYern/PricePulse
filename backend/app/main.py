@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 import contextlib # Import contextlib for lifespan management
+from app.config import ALLOWED_CORS_ORIGINS
 
 from app.database import Base, get_db, get_engine, get_session_local
 
@@ -35,7 +36,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=ALLOWED_CORS_ORIGINS,  # Allows origins specified in the config
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
