@@ -121,9 +121,12 @@ def get_user_products(user_id: int, db: Session = Depends(get_db), current_user:
     # Query to get all products associated with the product_ids
     products = db.query(Product).filter(Product.id.in_(product_ids)).all()
 
+    # Create a dictionary for O(1) lookups of user_products by product_id
+    user_product_map = {up.product_id: up for up in user_products}
+
     output_products = []
     for product in products:
-        user_product_entry = next((up for up in user_products if up.product_id == product.id), None)
+        user_product_entry = user_product_map.get(product.id)
         if user_product_entry:
             output_products.append(ProductOut(
                 id=product.id,
