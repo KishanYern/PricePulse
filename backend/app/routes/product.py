@@ -79,7 +79,27 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    return product
+    
+    # Get the other data for this product
+    user_product = db.query(UserProduct).filter(UserProduct.product_id == product_id).first()
+    if not user_product:
+        raise HTTPException(status_code=404, detail="No user product found for this product")
+
+    # Return the product with user-specific details
+    return ProductOut(
+        id=product.id,
+        url=product.url,
+        name=product.name,
+        currentPrice=product.current_price,
+        lowestPrice=product.lowest_price,
+        highestPrice=product.highest_price,
+        notes=user_product.notes,
+        lowerThreshold=user_product.lower_threshold,
+        upperThreshold=user_product.upper_threshold,
+        notify=user_product.notify,
+        createdAt=product.created_at,
+        lastChecked=product.last_checked
+    )
 
 @router.get('/{user_id}/user-products', response_model=list[ProductOut])
 def get_user_products(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -95,12 +115,35 @@ def get_user_products(user_id: int, db: Session = Depends(get_db), current_user:
     user_products = db.query(UserProduct).filter(UserProduct.user_id == user_id).all()
     if not user_products:
         return []
-
+    
     product_ids = [up.product_id for up in user_products]
     
-    # Extract product IDs from UserProduct entries
+    # Query to get all products associated with the product_ids
     products = db.query(Product).filter(Product.id.in_(product_ids)).all()
-    return products
+
+    # Create a dictionary for O(1) lookups of user_products by product_id
+    user_product_map = {up.product_id: up for up in user_products}
+
+    output_products = []
+    for product in products:
+        user_product_entry = user_product_map.get(product.id)
+        if user_product_entry:
+            output_products.append(ProductOut(
+                id=product.id,
+                url=product.url,
+                name=product.name,
+                currentPrice=product.current_price,
+                lowestPrice=product.lowest_price,
+                highestPrice=product.highest_price,
+                notes=user_product_entry.notes,
+                lowerThreshold=user_product_entry.lower_threshold,
+                upperThreshold=user_product_entry.upper_threshold,
+                notify=user_product_entry.notify,
+                createdAt=product.created_at,
+                lastChecked=product.last_checked
+            ))
+
+    return output_products
 
 @router.post('/create-product', status_code=status.HTTP_201_CREATED, response_model=ProductOut)
 def create_product(user_product_data: UserCreateProduct, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -147,6 +190,10 @@ def create_product(user_product_data: UserCreateProduct, db: Session = Depends(g
             currentPrice=product.current_price,
             lowestPrice=product.lowest_price,
             highestPrice=product.highest_price,
+            notes=user_product_entry.notes,
+            lowerThreshold=user_product_entry.lower_threshold,
+            upperThreshold=user_product_entry.upper_threshold,
+            notify=user_product_entry.notify,
             createdAt=product.created_at,
             lastChecked=product.last_checked,
         )
