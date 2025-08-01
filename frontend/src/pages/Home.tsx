@@ -82,10 +82,10 @@ const Home: React.FC = () => {
             )}
             <div className='min-h-screen bg-gradient-to-br from-primary to-secondary flex items-center justify-center p-4'>
                 <ul className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8'>
-                    {products.map((product, index) => (
+                    {products.map((product) => (
                         <div
                             className='card bg-base-100 w-96 shadow-sm hover:shadow-lg transition-shadow duration-200 hover:scale-105'
-                            key={index}
+                            key={product.id}
                         >
                             <div className='card-body'>
                                 <h2 className='card-title'>{product.name}</h2>
@@ -119,7 +119,7 @@ const Home: React.FC = () => {
                                 {
                                     product.upperThreshold && (
                                         <p>
-                                            Higher Threshold: $
+                                            Upper Threshold: $
                                             {product.upperThreshold.toFixed(2)}
                                         </p>
                                     )

@@ -72,7 +72,7 @@ def get_all_products(db: Session = Depends(get_db)):
     return products
 
 @router.get('/{product_id}', response_model=ProductOut)
-def get_product(product_id: int, db: Session = Depends(get_db)):
+def get_product(product_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Retrieve a product by the given product ID.
     """
@@ -81,7 +81,7 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Product not found")
     
     # Get the other data for this product
-    user_product = db.query(UserProduct).filter(UserProduct.product_id == product_id).first()
+    user_product = db.query(UserProduct).filter(UserProduct.product_id == product_id, UserProduct.user_id == current_user.id).first()
     if not user_product:
         raise HTTPException(status_code=404, detail="No user product found for this product")
 
