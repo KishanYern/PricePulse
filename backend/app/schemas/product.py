@@ -23,6 +23,10 @@ class ProductOut(BaseModel):
     current_price: float = Field(..., alias="currentPrice")
     lowest_price: float | None = Field(None, alias="lowestPrice")
     highest_price: float | None = Field(None, alias="highestPrice")
+    notes: str | None = Field(None, alias="notes")
+    lower_threshold: float | None = Field(None, alias="lowerThreshold")
+    upper_threshold: float | None = Field(None, alias="upperThreshold")
+    notify: bool = Field(True, alias="notify")
     created_at: datetime = Field(..., alias="createdAt")
     last_checked: datetime = Field(..., alias="lastChecked")
 

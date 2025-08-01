@@ -17,7 +17,7 @@ const Home: React.FC = () => {
             }
             try {
                 const response = await axios.get(
-                    `http://localhost:8000/${user.id}/user-products/`,
+                    `http://localhost:8000/products/${user.id}/user-products`,
                     {
                         withCredentials: true, // Ensure cookies are sent with the request
                     }
@@ -82,10 +82,10 @@ const Home: React.FC = () => {
             )}
             <div className='min-h-screen bg-gradient-to-br from-primary to-secondary flex items-center justify-center p-4'>
                 <ul className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8'>
-                    {products.map((product) => (
+                    {products.map((product, index) => (
                         <div
                             className='card bg-base-100 w-96 shadow-sm hover:shadow-lg transition-shadow duration-200 hover:scale-105'
-                            key={product.id}
+                            key={index}
                         >
                             <div className='card-body'>
                                 <h2 className='card-title'>{product.name}</h2>
@@ -101,6 +101,40 @@ const Home: React.FC = () => {
                                     Highest Price: $
                                     {product.highestPrice?.toFixed(2) || "N/A"}
                                 </p>
+                                {
+                                    product.notes && (
+                                        <p>
+                                            Notes: {product.notes}
+                                        </p>
+                                    )
+                                }
+                                {
+                                    product.lowerThreshold && (
+                                        <p>
+                                            Lower Threshold: $
+                                            {product.lowerThreshold.toFixed(2)}
+                                        </p>
+                                    )
+                                }
+                                {
+                                    product.upperThreshold && (
+                                        <p>
+                                            Higher Threshold: $
+                                            {product.upperThreshold.toFixed(2)}
+                                        </p>
+                                    )
+                                }
+                                {
+                                    product.notify ? (
+                                        <p className='text-green-500'>
+                                            Notifications Enabled
+                                        </p>
+                                    ) : (
+                                        <p className='text-red-500'>
+                                            Notifications Disabled
+                                        </p>
+                                    )
+                                }
                                 <p>
                                     Last Checked:{" "}
                                     {new Date(
