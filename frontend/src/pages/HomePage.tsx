@@ -5,7 +5,7 @@ import { AddProduct } from "../components/AddProduct";
 import { useAuth } from "../AuthContext"; // Import the AuthContext
 
 const Home: React.FC = () => {
-    const { isAuthenticated, user, isLoading, logout } = useAuth(); // Get the user from AuthContext
+    const { isAuthenticated, user, isLoading } = useAuth(); // Get the user from AuthContext
     const [showAddProduct, setShowAddProduct] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoadingProducts, setIsLoadingProducts] = useState(false);
@@ -13,7 +13,7 @@ const Home: React.FC = () => {
     useEffect(() => {
         const fetchData: () => Promise<void> = async () => {
             console.log(user);
-            if(!user) {
+            if(isLoading || !user) {
                 console.error("User data is not available.");
                 return;
             }
@@ -26,7 +26,6 @@ const Home: React.FC = () => {
                         withCredentials: true, // Ensure cookies are sent with the request
                     }
                 );
-                console.log("Fetched products:", response.data);
 
                 if(!Array.isArray(response.data)) {
                     console.error("Expected an array of products, but received:", response.data);
@@ -41,13 +40,23 @@ const Home: React.FC = () => {
             }
         };
 
-        fetchData();
-    }, [user]);
+        if(isAuthenticated && user && !isLoading) {
+            fetchData();
+        }
+    }, [isAuthenticated, user, isLoading]);
 
     if (isLoadingProducts) {
         return (
             <div className='flex items-center justify-center min-h-screen'>
                 <p className='text-white'>Loading products...</p>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+                <p className="text-white text-lg">Please log in to view products.</p>
             </div>
         );
     }
@@ -58,33 +67,9 @@ const Home: React.FC = () => {
     };
 
     return (
-        <div>
-            {isLoading ? (
-                <div className='flex items-center justify-center min-h-screen'>
-                    <p className='text-white'>Loading...</p>
-                </div>
-            ) : !isAuthenticated ? (
-                <div className='flex items-center justify-center min-h-screen'>
-                    <p className='text-white'>
-                        Please log in to view products.
-                    </p>
-                </div>
-            ) : user ? (
-                <div className='flex items-center justify-between p-4 bg-gradient-to-r from-primary to-secondary'>
-                    <h1 className='text-2xl font-bold text-white'>
-                        Welcome, {user.email}!
-                    </h1>
-                    <button className='btn btn-secondary' onClick={logout}>
-                        Logout
-                    </button>
-                </div>
-            ) : (
-                <div className='flex items-center justify-center min-h-screen'>
-                    <p className='text-white'>Loading user data...</p>
-                </div>
-            )}
-            <div className='flex justify-between items-center p-4 bg-gradient-to-r from-primary to-secondary'>
-                <h1 className='text-2xl font-bold text-white'>Price Tracker</h1>
+        <div className="bg-gray-900">
+            <div className="flex justify-between p-4">
+                <h1 className='text-2xl font-bold text-white'>Your Products</h1>
                 <button
                     className='btn btn-primary'
                     onClick={() => setShowAddProduct(!showAddProduct)}
