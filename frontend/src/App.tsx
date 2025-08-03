@@ -1,29 +1,37 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./AuthContext";
-import RegistrationPage from "./pages/RegistrationPage";
-import LoginPage from "./pages/LoginPage";
-import HomePage from "./pages/Home";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './AuthContext';
+import ProtectedRoute from './components/ProtectedRoute'; 
+import Home from './pages/HomePage';
+import Login from './pages/LoginPage';
+import Register from './pages/RegistrationPage';
 
-function App() {
-    return (
-        <Router>
-            <AuthProvider>
-                {" "}
-                <Routes>
-                    <Route path='/login' element={<LoginPage />} />
-                    <Route path='/register' element={<RegistrationPage />} />
+// Define the paths in an array
+const homePaths = ['/', '/home'];
 
-                    {/* Protected routes */}
-                    <Route element={<ProtectedRoute />}>
-                        <Route path='/home' element={<HomePage />} />
-                        {/* Add other protected routes here */}
-                        <Route path='/' element={<HomePage />} />{" "}
-                    </Route>
-                </Routes>
-            </AuthProvider>
-        </Router>
-    );
-}
+const App = () => {
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path='/register' element={<Register />} />
+
+          {homePaths.map(path => (
+            <Route 
+              key={path}
+              path={path} 
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              } 
+            />
+          ))}
+
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
+};
 
 export default App;

@@ -11,7 +11,7 @@ interface User {
 interface AuthContextType {
     isAuthenticated: boolean;
     user: User | null;
-    login: (userData: User) => void;
+    login: (email: string, password: string) => Promise<User>;
     logout: () => void;
     isLoading: boolean;
 }
@@ -53,9 +53,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         checkAuthStatus();
     }, []); // Run once on component mount
 
-    const login = (userData: User) => {
-        setIsAuthenticated(true);
-        setUser(userData);
+    const login = async (email: string, password: string): Promise<User> => {
+        try {
+            // 1. Send login credentials to the backend
+            await axios.post(
+                "http://localhost:8000/users/login",
+                {
+                    email,
+                    password,
+                },
+                {
+                    withCredentials: true,
+                }
+            );
+
+            // 2. After a successful login, fetch the user's details
+            const userResponse = await axios.get(
+                "http://localhost:8000/users/me",
+                { withCredentials: true }
+            );
+
+            const userData = userResponse.data;
+
+            // 3. Update the state with the correct user data
+            setIsAuthenticated(true);
+            setUser(userData);
+            
+            // 4. Return the user data object
+            return userData;
+
+        } catch (error) {
+            console.error("Login failed:", error);
+            setIsAuthenticated(false);
+            setUser(null);
+            throw error; // Re-throw the error so the component can handle it
+        }
     };
 
     const logout = async () => {

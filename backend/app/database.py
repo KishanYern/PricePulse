@@ -20,7 +20,7 @@ def get_engine():
         database_url = os.getenv("DATABASE_URL")
         if not database_url:
             raise ValueError("DATABASE_URL environment variable is not set.")
-        _engine = create_engine(database_url)
+        _engine = create_engine(database_url, pool_pre_ping=True)
     return _engine
 
 def get_session_local():

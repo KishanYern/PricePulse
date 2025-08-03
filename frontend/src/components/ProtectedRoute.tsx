@@ -1,19 +1,28 @@
-import React from "react";
-import { Outlet, Navigate } from "react-router-dom";
-import { useAuth } from "../AuthContext";
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 
-const ProtectedRoute: React.FC = () => {
-    const { isAuthenticated, isLoading } = useAuth();
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
 
-    if (isLoading) {
-        return (
-            <div className='loading loading-spinner'>
-                Loading authentication...
-            </div>
-        );
-    }
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
-    return isAuthenticated ? <Outlet /> : <Navigate to='/login' replace />;
+  if (isLoading) {
+    // If the authentication check is in progress, you can render a loading spinner or null
+    return <div>Loading...</div>; // Or <LoadingSpinner />
+  }
+
+  if (!isAuthenticated) {
+    // If not authenticated, redirect to the login page,
+    // preserving the current location so we can redirect back later
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // If authenticated and not loading, render the child components (e.g., the Home page)
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

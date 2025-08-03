@@ -8,13 +8,17 @@ const Home: React.FC = () => {
     const { isAuthenticated, user, isLoading, logout } = useAuth(); // Get the user from AuthContext
     const [showAddProduct, setShowAddProduct] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
+    const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
     useEffect(() => {
         const fetchData: () => Promise<void> = async () => {
-            if(!isAuthenticated || !user) {
-                console.error("User is not authenticated or user data is not available.");
+            console.log(user);
+            if(!user) {
+                console.error("User data is not available.");
                 return;
             }
+
+            setIsLoadingProducts(true);
             try {
                 const response = await axios.get(
                     `http://localhost:8000/products/${user.id}/user-products`,
@@ -26,16 +30,27 @@ const Home: React.FC = () => {
 
                 if(!Array.isArray(response.data)) {
                     console.error("Expected an array of products, but received:", response.data);
+                    setProducts([]);
                     return;
                 }
                 setProducts(response.data);
             } catch (error) {
                 console.error("Error fetching data:", error);
+            } finally {
+                setIsLoadingProducts(false);
             }
         };
 
         fetchData();
-    }, [isAuthenticated, user]);
+    }, [user]);
+
+    if (isLoadingProducts) {
+        return (
+            <div className='flex items-center justify-center min-h-screen'>
+                <p className='text-white'>Loading products...</p>
+            </div>
+        );
+    }
 
     const handleProductAdded = (newProduct: Product) => {
         // when a new product is added, update the product list.

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
@@ -68,44 +67,8 @@ const LoginForm: React.FC = () => {
         setIsLoading(true); // Set Loading while making the fetch request to the server
 
         try {
-            console.log("Login data:", {
-                email: formData.email,
-                password: formData.password,
-            });
-
-            // Call the backend API to authenticate the user
-            const response = await axios.post(
-                "http://localhost:8000/users/login",
-                {
-                    email: formData.email,
-                    password: formData.password,
-                },
-                {
-                    withCredentials: true, // Include credentials for cookie handling. IMPORTANT for JWT
-                }
-            );
-
-            // Handle response from the server
-            if (response.status !== 200) {
-                if (response.status === 400) {
-                    throw new Error("Invalid email or password");
-                } else if (response.status === 404) {
-                    throw new Error("User not found");
-                } else if (response.status === 500) {
-                    throw new Error("Server error, please try again later");
-                } else {
-                    console.error(
-                        "Unexpected response status:",
-                        response.status
-                    );
-                    console.error("Response data:", response.data);
-                    throw new Error("Login failed");
-                }
-            }
-
-            // If login is successful, update the auth context
-            authLogin(response.data); // Use the login function from AuthContext to set user data
-            navigate("/home"); // Redirect to home page on successful login
+            await authLogin(formData.email, formData.password); // Call the login function from AuthContext
+            navigate("/"); // Redirect to home page after successful login
         } catch (error) {
             console.error("Login failed:", error);
             alert("Login failed. Please try again.");
