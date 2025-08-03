@@ -9,14 +9,13 @@ const Navbar: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const { user, logout } = useAuth();
     const sidebarRef = useRef<HTMLDivElement>(null);
+    const toggleButtonRef = useRef<HTMLLabelElement>(null);
 
     // Effect to handle clicks outside of the sidebar
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             // Check if the click is outside the sidebar but not the toggle button itself
-            const toggleButton = document.getElementById(
-                "sidebar-toggle-button"
-            );
+            const toggleButton = toggleButtonRef.current;
             if (
                 isSidebarOpen &&
                 sidebarRef.current &&
@@ -57,6 +56,7 @@ const Navbar: React.FC = () => {
                             className="btn btn-square btn-ghost"
                             id="sidebar-toggle-button"
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            ref={toggleButtonRef}
                         >
                             {isSidebarOpen ? (
                                 <IoClose className="text-2xl" />
