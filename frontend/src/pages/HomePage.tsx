@@ -67,7 +67,7 @@ const Home: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 min-h-screen">
+        <div className="bg-gray-900">
             <div className="flex justify-between p-4">
                 <h1 className='text-2xl font-bold text-white'>Your Products</h1>
                 <button
