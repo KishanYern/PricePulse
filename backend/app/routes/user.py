@@ -169,10 +169,17 @@ async def logout(response: Response, current_user: User = Depends(get_current_us
     return {"message": "Logged out successfully"}
 
 @router.put("/admin/{email}", response_model=WholeUserOut)
-def update_user_role(email: str, is_admin: bool, db: Session = Depends(get_db)):
+def update_user_role(
+    email: str,
+    is_admin: bool,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Update the admin status of a user.
     """
+    if not current_user.admin:
+        raise HTTPException(status_code=403, detail="Not authorized")
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
