@@ -20,7 +20,7 @@ class User(Base):
         DateTime(timezone=True),
         nullable=True
     )
-    admin: Mapped[bool] = mapped_column(Boolean,default=False, nullable=False)
+    admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
     alerts = relationship( 
