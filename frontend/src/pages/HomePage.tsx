@@ -90,6 +90,9 @@ const Home: React.FC = () => {
                             <div className='card-body'>
                                 <h2 className='card-title'>{product.name}</h2>
                                 <p>
+                                    Product ID: {product.id}
+                                </p>
+                                <p>
                                     Current Price: $
                                     {product.currentPrice?.toFixed(2)}
                                 </p>
