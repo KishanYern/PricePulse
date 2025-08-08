@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from app.database import get_db
 from app.models import User
-from app.schemas.user import UserCreate, UserOut, Token
+from app.schemas.user import UserCreate, UserOut, WholeUserOut, Token
 from app.utils import hash_password, verify_password
 from app.auth import create_access_token, get_current_user
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -20,7 +20,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     """
     return current_user
 
-@router.get('/{user_id}', response_model=UserOut)
+@router.get('/{user_id}', response_model=WholeUserOut)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     """
     Retrieve a user by the given user ID.
@@ -30,7 +30,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="There is no user with this ID")
     return user
 
-@router.get("/", response_model=list[UserOut])
+@router.get("/", response_model=list[WholeUserOut])
 def get_all_users(db: Session = Depends(get_db)):
     """
     Retrieve all users.
@@ -72,14 +72,14 @@ def create_user(
         value=access_token,
         httponly=True,
         secure=True,
-        samesite="Lax",
+        samesite="lax",
         expires=(datetime.now(timezone.utc) + access_token_expires),
         path="/",
     )
 
     return Token(access_token=access_token, token_type="bearer") # Return the token
 
-@router.put('/{user_id}', response_model=UserOut)
+@router.put('/{user_id}', response_model=WholeUserOut)
 def update_user(user_id: int, user: UserCreate, db: Session = Depends(get_db)):
     """
     Update an existing user.
@@ -140,7 +140,7 @@ def login_user(
         value=access_token,
         httponly=True,
         secure=True,
-        samesite="Lax",
+        samesite="lax",
         max_age=int(access_token_expires.total_seconds()),
         path="/",
     )
@@ -163,7 +163,21 @@ async def logout(response: Response, current_user: User = Depends(get_current_us
         key="access_token",
         httponly=True,
         secure=True,
-        samesite="Lax",
+        samesite="lax",
         path="/"
     )
     return {"message": "Logged out successfully"}
+
+@router.put("/admin/{email}", response_model=WholeUserOut)
+def update_user_role(email: str, is_admin: bool, db: Session = Depends(get_db)):
+    """
+    Update the admin status of a user.
+    """
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.admin = is_admin
+    db.commit()
+    db.refresh(user)
+    return user

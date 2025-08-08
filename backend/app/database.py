@@ -1,7 +1,11 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 from dotenv import load_dotenv
+
+# Clear metadata cache
+metadata = MetaData()
+metadata.clear()
 
 # Base for declarative models
 Base = declarative_base()

@@ -75,6 +75,11 @@ const Navbar: React.FC = () => {
                             <div className="flex items-center space-x-4 ml-4">
                                 <span className="font-semibold text-sm">
                                     Hello, {user.email}!
+                                    {
+                                        user.admin ? (
+                                            <span className=" text-red-500 ml-2">(Admin)</span>
+                                        ) : null
+                                    }
                                 </span>
                                 <button
                                     className="btn btn-sm btn-outline btn-error"
