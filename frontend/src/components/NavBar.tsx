@@ -49,7 +49,7 @@ const Navbar: React.FC = () => {
             <div className="drawer-content flex flex-col">
                 {/* Navbar */}
                 <div className="w-full navbar bg-base-100 shadow-md">
-                    <div className="flex-none lg:hidden">
+                    <div className="flex-none">
                         <label
                             htmlFor="my-drawer-3"
                             aria-label="open sidebar"
@@ -68,14 +68,6 @@ const Navbar: React.FC = () => {
                     
                     <div className="flex-1 px-2 mx-2 font-bold text-xl">
                         Price Tracker
-                    </div>
-
-                    <div className="flex-none hidden lg:block">
-                        <ul className="menu menu-horizontal">
-                            <li>
-                                <Link to="/">Home</Link>
-                            </li>
-                        </ul>
                     </div>
 
                     <div className="flex-none">
