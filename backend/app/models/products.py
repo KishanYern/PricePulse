@@ -40,6 +40,7 @@ class Product(Base):
         passive_deletes=True
     )
 
+    # When a product is deleted, delete all the user-product associations related to that product.
     user_products = relationship(
         "UserProduct",
         back_populates="product",
