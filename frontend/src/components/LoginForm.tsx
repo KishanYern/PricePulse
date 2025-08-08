@@ -35,6 +35,7 @@ const LoginForm: React.FC = () => {
     };
 
     const validateForm = () => {
+        // Form element should handle normal validations for the email and password
         const newErrors = {
             email: "",
             password: "",
@@ -67,7 +68,8 @@ const LoginForm: React.FC = () => {
         setIsLoading(true); // Set Loading while making the fetch request to the server
 
         try {
-            await authLogin(formData.email, formData.password); // Call the login function from AuthContext
+            // Pass the lowercase email to the login function
+            await authLogin(formData.email.toLowerCase(), formData.password); // Call the login function from AuthContext
             navigate("/"); // Redirect to home page after successful login
         } catch (error) {
             console.error("Login failed:", error);

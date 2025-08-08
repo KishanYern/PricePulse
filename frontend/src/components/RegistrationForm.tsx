@@ -83,17 +83,12 @@ const RegistrationForm = () => {
         setIsLoading(true); // Set Loading while making the fetch request to the server
 
         try {
-            // Here you would typically make an API call to register the user
-            console.log("Registration data:", {
-                email: formData.email,
-                password: formData.password,
-            });
-
             // Call the API endpoint to register the user
+            // Pass the lowercase email to the API
             const response = await axios.post(
                 "http://localhost:8000/users/create",
                 {
-                    email: formData.email,
+                    email: formData.email.toLowerCase(),
                     password: formData.password,
                 },
                 {
