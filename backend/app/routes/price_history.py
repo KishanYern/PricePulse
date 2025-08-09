@@ -48,14 +48,14 @@ def get_product_price_history(product_id: Optional[int | str],
     price_history = query.all()
     return price_history
 
-@router.get('/', response_model=dict[str, list[ReturnSearchHistoryModel]])
+@router.get('/', response_model=list[ReturnSearchHistoryModel])
 def get_all_price_histories(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Retrieve all price histories for products associated with the current user.
     """
     user_products = db.query(UserProduct).filter(UserProduct.user_id == current_user.id).all()
     if not user_products:
-        return {}
+        return []
 
     product_ids = [up.product_id for up in user_products]
     all_price_histories = db.query(PriceHistory).filter(PriceHistory.product_id.in_(product_ids)).all()
