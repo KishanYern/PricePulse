@@ -18,7 +18,7 @@ class PriceHistoryOut(BaseModel):
 
 class ReturnSearchHistoryModel(BaseModel):
     id: int
-    name: str | None = Field(..., alias="productName")
+    name: str | None = Field(None, alias="productName")
     product_id: int = Field(..., alias="productId")
     price: float
     timestamp: datetime
