@@ -15,17 +15,16 @@ const PriceHistoryPage = () => {
     const [error, setError] = useState<string | null>(null);
 
     const validateSearch = () => {
-        // if the product id cant be set as a number, return an error
-        if (productId && isNaN(Number(productId))) {
+        // Convert productId to a number for validation
+        const productIdNum = Number(productId);
+        if (productId !== "" && isNaN(productIdNum)) {
             setError("Product ID must be a number if entered.");
             return false;
         }
-
-        if (typeof productId === "number" && productId <= 0) {
+        if (productId !== "" && productIdNum <= 0) {
             setError("Product ID must be a positive number.");
             return false;
         }
-
         setError(null);
         return true;
     };
