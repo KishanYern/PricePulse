@@ -2,32 +2,55 @@ import { useState } from "react";
 import PriceHistorySearch from "../components/PriceHistorySearch";
 import PriceHistoryResults from "../components/PriceHistoryResults";
 import type { PriceHistoryItem } from "../types/PriceHistory";
+import axios from "axios";
 
 const PriceHistoryPage = () => {
-    const [productId, setProductId] = useState<string>("");
+    const [productId, setProductId] = useState<number | string>("");
     const [productName, setProductName] = useState<string>("");
-    const [notifications, setNotifications] = useState<boolean>(false);
+    const [notifications, setNotifications] = useState<string>("all");
     const [searchResults, setSearchResults] = useState<
         PriceHistoryItem[] | null
     >(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const validateSearch = () => {
+        // if the product id cant be set as a number, return an error
+        if (productId && isNaN(Number(productId))) {
+            setError("Product ID must be a number if entered.");
+            return false;
+        }
+
+        if (typeof productId === "number" && productId <= 0) {
+            setError("Product ID must be a positive number.");
+            return false;
+        }
+
+        setError(null);
+        return true;
+    };
 
     const handleSearch = async () => {
+        if (!validateSearch()) {
+            setSearchResults(null);
+            return;
+        }
+
         setIsLoading(true);
         setSearchResults(null); // Clear previous results
 
         try {
-            // Use Test data for now till I build the API Route
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-
-            const mockData: PriceHistoryItem[] = [
-                { id: 1, productId: 1, price: 19.99, timestamp: "2024-07-01", source: "Store A" },
-                { id: 2, productId: 1, price: 21.5, timestamp: "2024-07-05", source: "Store B" },
-                { id: 3, productId: 1, price: 18.75, timestamp: "2024-07-10", source: "Store C" },
-            ];
-
-            const data = mockData;
-            setSearchResults(data);
+            // API call to get the products from the price history endpoint
+            const response = await axios.get("http://localhost:8000/price-history/search-price-history", {
+                params: {
+                    product_id: productId,
+                    name: productName,
+                    notifications: notifications
+                },
+                withCredentials: true
+            });
+            console.log("Search results:", response.data);
+            setSearchResults(response.data);
         } catch (error) {
             console.error("Failed to fetch data:", error);
             setSearchResults([]); // Set to empty array on error
@@ -39,8 +62,10 @@ const PriceHistoryPage = () => {
     const handleClear = () => {
         setProductId("");
         setProductName("");
-        setNotifications(false);
+        setNotifications("all");
         setSearchResults(null);
+        setIsLoading(false);
+        setError(null);
     };
 
     return (
@@ -70,6 +95,11 @@ const PriceHistoryPage = () => {
                     Clear
                 </button>
             </div>
+            {error && (
+                <div className="mt-4 text-red-500">
+                    {error}
+                </div>
+            )}
             <PriceHistoryResults data={searchResults} isLoading={isLoading} />
         </div>
     );

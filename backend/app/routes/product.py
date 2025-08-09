@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Product, PriceHistory, UserProduct, User
 from app.schemas.product import ProductCreate, UserCreateProduct, ProductOut
-from app.schemas.price_history import PriceHistoryOut
 from app.scraper.product_scraper import scrape_product_data
 from app.auth import get_current_user
 from datetime import datetime, timezone
@@ -247,18 +246,6 @@ def update_product(product_id: int, product: ProductCreate, db: Session = Depend
     db.commit()
     db.refresh(existing_product)
     return existing_product
-
-@router.get('/{product_id}/price-history', response_model=list[PriceHistoryOut])
-def get_product_price_history(product_id: int, db: Session = Depends(get_db)):
-    """
-    Retrieve the price history of a product by the given product ID.
-    """
-    product = db.query(Product).filter(Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    price_history = db.query(PriceHistory).filter(PriceHistory.product_id == product_id).all()
-    return price_history
 
 @router.delete('/{product_id}', response_model=dict)
 def delete_product(product_id: int, db: Session = Depends(get_db)):

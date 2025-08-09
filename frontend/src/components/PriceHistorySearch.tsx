@@ -23,11 +23,11 @@ const PriceHistorySearch: React.FC<PriceHistorySearchProps> = ({
                     </label>
                     <input
                         className="mt-1 block w-full p-2 border border-gray-600 rounded bg-gray-700 text-white"
-                        type="text"
+                        type="number"
                         id="productId"
                         placeholder="Enter Product ID"
                         value={productId}
-                        onChange={(e) => setProductId(e.target.value)}
+                        onChange={(e) => setProductId(Number(e.target.value))}
                     />
                 </div>
                 <div className="flex-1">
@@ -57,9 +57,10 @@ const PriceHistorySearch: React.FC<PriceHistorySearchProps> = ({
                         className="mt-1 block w-full p-2 border border-gray-600 rounded bg-gray-700 text-white"
                         name="notifications"
                         id="notifications"
-                        value={notifications ? "enabled" : "disabled"}
-                        onChange={(e) => setNotifications(e.target.value === "enabled")}
+                        value={notifications}
+                        onChange={(e) => setNotifications(e.target.value)}
                     >
+                        <option value="all">All</option>
                         <option value="enabled">Enabled</option>
                         <option value="disabled">Disabled</option>
                     </select>
