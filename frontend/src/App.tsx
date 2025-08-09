@@ -5,6 +5,7 @@ import MainLayout from "./components/MainLayout";
 import Home from "./pages/HomePage";
 import Login from "./pages/LoginPage";
 import Register from "./pages/RegistrationPage";
+import PriceHistoryPage from "./pages/PriceHistoryPage";
 
 // Define the paths in an array
 const homePaths = ["/", "/home"];
@@ -30,6 +31,13 @@ const App = () => {
                             }
                         />
                     ))}
+                    <Route path="/price-history" element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <PriceHistoryPage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    } />
                 </Routes>
             </AuthProvider>
         </Router>

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IoClose } from "react-icons/io5";
 import { FaHome } from "react-icons/fa";
+import { AiOutlineHistory } from "react-icons/ai";
 
 const Navbar: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -107,6 +108,10 @@ const Navbar: React.FC = () => {
                         <Link to="/">
                             <FaHome className="inline-block w-6 h-6 mr-2" />
                             Home
+                        </Link>
+                        <Link to='/price-history'>
+                            <AiOutlineHistory className="inline-block w-6 h-6 mr-2" />
+                            Price Histories
                         </Link>
                     </li>
                 </ul>

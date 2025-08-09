@@ -9,7 +9,7 @@ from app.config import ALLOWED_CORS_ORIGINS
 from app.database import Base, get_db, get_engine, get_session_local
 
 from app import models
-from app.routes import user, product
+from app.routes import user, product, price_history
 
 # Define the lifespan context manager
 @contextlib.asynccontextmanager
@@ -47,6 +47,9 @@ app.include_router(user.router)
 
 # Product routes
 app.include_router(product.router)
+
+# Price History routes
+app.include_router(price_history.router)
 
 @app.get('/')
 def root():
