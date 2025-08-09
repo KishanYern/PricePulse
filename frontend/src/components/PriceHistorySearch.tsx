@@ -27,7 +27,7 @@ const PriceHistorySearch: React.FC<PriceHistorySearchProps> = ({
                         id="productId"
                         placeholder="Enter Product ID"
                         value={productId}
-                        onChange={(e) => setProductId(Number(e.target.value))}
+                        onChange={(e) => setProductId(e.target.value === "" ? "" : Number(e.target.value))}
                     />
                 </div>
                 <div className="flex-1">
