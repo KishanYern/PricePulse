@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '../utils/test-utils';
 import userEvent from '@testing-library/user-event';
 import axios from 'axios';
 import Home from './HomePage';
-import { Product } from '../types/Product';
+import type { Product } from '../types/Product';
 
 // Mock axios
 vi.mock('axios');

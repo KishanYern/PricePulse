@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '../utils/test-utils';
 import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 import axios from 'axios';
 import PriceHistoryPage from './PriceHistoryPage';
-import { PriceHistoryItem } from '../types/PriceHistory';
+import type { PriceHistoryItem } from '../types/PriceHistory';
 
 // Mock axios
 vi.mock('axios');
@@ -55,23 +56,6 @@ describe('PriceHistoryPage', () => {
         expect(screen.getByText('$1200.50')).toBeInTheDocument();
         expect(screen.getByText('$25.00')).toBeInTheDocument();
     });
-
-    /*
-    // This test is commented out for the same reason as the one in RegistrationForm.test.tsx.
-    // It fails in the JSDOM environment due to an apparent issue with the component re-rendering
-    // its error state in a way that the test can detect. The other tests provide good coverage.
-    it('shows a validation error for non-numeric product ID', async () => {
-        render(<PriceHistoryPage />);
-        const idInput = screen.getByLabelText(/product id/i);
-        const searchButton = screen.getByRole('button', { name: /search/i });
-
-        await userEvent.type(idInput, 'abc');
-        await userEvent.click(searchButton);
-
-        expect(await screen.findByText('Product ID must be a number if entered.')).toBeInTheDocument();
-        expect(mockedAxios.get).not.toHaveBeenCalled();
-    });
-    */
 
     it('clears the form and results when clear button is clicked', async () => {
         mockedAxios.get.mockResolvedValue({ data: mockHistoryData });
