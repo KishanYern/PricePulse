@@ -38,11 +38,10 @@ def get_product_price_history(product_id: Optional[int | str],
     join(UserProduct, UserProduct.product_id == Product.id).\
     join(User, User.id == UserProduct.user_id)
 
-    # Common users will only be able to see their own price history
-    if admin is not None and not admin:
+    # Only admin users can see all price history or filter by user
+    if not getattr(current_user, "admin", False):
         query = query.filter(UserProduct.user_id == current_user.id)
     else:
-        # Admin users can see all price history if the user_filter is not passed in
         if user_filter is not None:
             query = query.filter(UserProduct.user_id == user_filter)
 
