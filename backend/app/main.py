@@ -6,10 +6,17 @@ from sqlalchemy.orm import Session
 import contextlib # Import contextlib for lifespan management
 from app.config import ALLOWED_CORS_ORIGINS
 
+# CRON Jobs
+from apscheduler.schedulers.background import BackgroundScheduler
+from app.scheduler.products import update_product_prices_job
+
 from app.database import Base, get_db, get_engine, get_session_local
 
 from app import models
 from app.routes import user, product, price_history
+
+# Define the background scheduler
+scheduler = BackgroundScheduler()
 
 # Define the lifespan context manager
 @contextlib.asynccontextmanager
@@ -27,8 +34,16 @@ async def lifespan(app: FastAPI):
     else:
         print("Skipping database table creation during test environment startup (handled by pytest fixtures).")
 
-    yield 
+    # Start the background scheduler
+    print("Starting background scheduler...")
+    scheduler.add_job(update_product_prices_job, "interval", hour=2, minutes=0)
+    scheduler.start()
+    
+    yield
 
+    # Shutdown Events
+    print("Shutting down background scheduler...")
+    scheduler.shutdown()
     print("Application shutdown complete.")
 
 # Pass the lifespan context manager to the FastAPI app
