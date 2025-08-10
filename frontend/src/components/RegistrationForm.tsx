@@ -76,7 +76,6 @@ const RegistrationForm = () => {
 
         if (!validateForm()) {
             // If validation fails, do not proceed
-            console.error("Form validation failed:", errors);
             return;
         }
 
@@ -109,6 +108,7 @@ const RegistrationForm = () => {
                         email: "Server error, please try again later",
                     }));
                 }
+                return; // Stop execution if there was an error
             }
 
             // If registration is successful, redirect to the home page
@@ -140,7 +140,6 @@ const RegistrationForm = () => {
                         className={`input input-bordered w-full pr-10 ${
                             errors.email ? "input-error" : ""
                         }`}
-                        required
                     />
                     <div className='absolute inset-y-0 right-0 flex items-center pr-3'>
                         <svg
@@ -182,7 +181,6 @@ const RegistrationForm = () => {
                         className={`input input-bordered w-full pr-10 ${
                             errors.password ? "input-error" : ""
                         }`}
-                        required
                     />
                     <button
                         type='button'
@@ -258,7 +256,6 @@ const RegistrationForm = () => {
                         className={`input input-bordered w-full pr-10 ${
                             errors.confirmPassword ? "input-error" : ""
                         }`}
-                        required
                     />
                     <button
                         type='button'
@@ -319,7 +316,6 @@ const RegistrationForm = () => {
                     <input
                         type='checkbox'
                         className='checkbox checkbox-primary'
-                        required
                     />
                     <span className='label-text'>
                         I agree to the{" "}
