@@ -1,13 +1,18 @@
 import { useState } from "react";
+import { useAuth } from "../AuthContext"
 import PriceHistorySearch from "../components/PriceHistorySearch";
 import PriceHistoryResults from "../components/PriceHistoryResults";
 import type { PriceHistoryItem } from "../types/PriceHistory";
 import axios from "axios";
 
 const PriceHistoryPage = () => {
+    // Get the logged in user. This is needed to render user/admin specific fields
+    const { isAdmin } = useAuth();
+
     const [productId, setProductId] = useState<number | string>("");
     const [productName, setProductName] = useState<string>("");
     const [notifications, setNotifications] = useState<string>("all");
+    const [userFilter, setUserFilter] = useState<number | null>(null);
     const [searchResults, setSearchResults] = useState<
         PriceHistoryItem[] | null
     >(null);
@@ -79,6 +84,9 @@ const PriceHistoryPage = () => {
                 setProductName={setProductName}
                 notifications={notifications}
                 setNotifications={setNotifications}
+                userFilter={userFilter}
+                setUserFilter={setUserFilter}
+                isAdmin={isAdmin}
             />
             <div className="mt-6 flex space-x-4">
                 <button

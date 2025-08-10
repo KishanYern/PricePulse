@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import type { PriceHistorySearchProps } from "../types/PriceHistory";
+import axios from "axios";
 
 const PriceHistorySearch: React.FC<PriceHistorySearchProps> = ({
     productId,
@@ -7,7 +9,29 @@ const PriceHistorySearch: React.FC<PriceHistorySearchProps> = ({
     setProductName,
     notifications,
     setNotifications,
+    userFilter,
+    setUserFilter,
+    isAdmin,
 }) => {
+    // Array to hold all the users in the system
+    const [users, setUsers] = useState<{ id: number | null; email: string }[]>([]);
+
+    // Fetch users from the API
+    const fetchUsers = async () => {
+        try {
+            const response = await axios.get("http://localhost:8000/users/", {
+                withCredentials: true,
+            });
+            setUsers([{ id: null, email: "" }, ...response.data]);
+        } catch (error) {
+            console.error("Failed to fetch users:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
     return (
         <div className="space-y-4">
             <h2 className="text-2xl font-bold mb-4 text-white">
@@ -27,7 +51,13 @@ const PriceHistorySearch: React.FC<PriceHistorySearchProps> = ({
                         id="productId"
                         placeholder="Enter Product ID"
                         value={productId}
-                        onChange={(e) => setProductId(e.target.value === "" ? "" : Number(e.target.value))}
+                        onChange={(e) =>
+                            setProductId(
+                                e.target.value === ""
+                                    ? ""
+                                    : Number(e.target.value)
+                            )
+                        }
                     />
                 </div>
                 <div className="flex-1">
@@ -65,6 +95,40 @@ const PriceHistorySearch: React.FC<PriceHistorySearchProps> = ({
                         <option value="disabled">Disabled</option>
                     </select>
                 </div>
+                {isAdmin && (
+                    <div className="flex-1">
+                        <label
+                            htmlFor="userFilter"
+                            className="block text-sm font-medium text-gray-300 mb-1"
+                        >
+                            User Filter
+                        </label>
+                        <select
+                            className="mt-1 block w-full p-2 border border-gray-600 rounded bg-gray-700 text-white"
+                            name="userFilter"
+                            id="userFilter"
+                            value={userFilter || ""}
+                            onChange={(e) =>
+                                setUserFilter(
+                                    e.target.value === ""
+                                        ? null
+                                        : Number(e.target.value)
+                                )
+                            }
+                        >
+                            {users.map((user) => {
+                                if (!user.id) return (
+                                    <option key={0} value=""/>
+                                );
+                                return (
+                                    <option key={user.id} value={user.id}>
+                                        {user.email}
+                                    </option>
+                                );
+                            })}
+                        </select>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -12,6 +12,9 @@ interface User {
 interface AuthContextType {
     isAuthenticated: boolean;
     user: User | null;
+
+    // Admin or normal user
+    isAdmin: boolean;
     login: (email: string, password: string) => Promise<User>;
     logout: () => void;
     isLoading: boolean;
@@ -111,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return (
         <AuthContext.Provider
-            value={{ isAuthenticated, user, login, logout, isLoading }}
+            value={{ isAuthenticated, user, isAdmin: user?.admin || false, login, logout, isLoading }}
         >
             {children}
         </AuthContext.Provider>

@@ -17,6 +17,9 @@ export interface PriceHistorySearchProps {
     setProductName: (name: string) => void;
     notifications: string;
     setNotifications: (value: string) => void;
+    userFilter: number | null;
+    setUserFilter: (value: number | null) => void;
+    isAdmin: boolean; // prop added to indicate if the logged in user is an admin
 }
 
 // Define the props for the results component
