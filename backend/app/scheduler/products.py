@@ -20,8 +20,10 @@ def update_product_prices_job():
     db = next(get_db())
 
     try:
-        products_to_update = db.query(Product).all()
-        for product in products_to_update:
+        # Process products in batches to avoid loading all into memory at once
+        batch_size = 100
+        products_iterator = db.query(Product).yield_per(batch_size)
+        for product in products_iterator:
             logger.info(f"Processing product: {product.name} (ID: {product.id}) at URL: {product.url}")
             scraped_data = scrape_product_data(product.url)
 
