@@ -88,10 +88,6 @@ PricePulse is a full-stack web application that allows you to track product pric
     ```
     The frontend will be running on `http://localhost:5173`.
 
-## 📸 Screenshots
-
-*This section will be updated with screenshots of the application.*
-
 ## 🗺️ Roadmap
 
 - [ ] **Email Notifications:** Implement a system to send email alerts to users when a product's price drops below a certain threshold.
