@@ -118,7 +118,7 @@ const PriceHistorySearch: React.FC<PriceHistorySearchProps> = ({
                         >
                             {users.map((user) => {
                                 if (!user.id) return (
-                                    <option key={0} value=""/>
+                                    <option key="empty" value=""/>
                                 );
                                 return (
                                     <option key={user.id} value={user.id}>
