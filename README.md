@@ -1,111 +1,100 @@
-# 📦 Price Tracker API
+# PricePulse
 
-Track product prices on Amazon and eBay, store price history, and get email alerts when prices drop!
+*Your personal price tracking assistant.*
 
----
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🚀 Features
+PricePulse is a full-stack web application that allows you to track product prices from your favorite online stores. Simply add a product URL, and PricePulse will monitor it for you, keeping a history of its price changes. This way, you can make sure you're always getting the best deal.
 
-- ✅ Track product prices by URL (Amazon, eBay)
-- 📉 Store and query price history in PostgreSQL
-- ⏱  Automatic hourly scraping using a scheduler
-- 🔔 Email alerts when prices drop below a user-defined threshold
-- 🧠 FastAPI backend with auto-generated Swagger documentation
-- 🐳 Docker-ready for easy deployment
-- 💡 Built using only free tools and services
+## 🚀 Key Features
 
----
+- **User Authentication:** Secure registration and login system.
+- **Product Tracking:** Track products from Amazon and eBay by simply providing the product URL.
+- **Price History:** View a detailed history of price changes for each tracked product.
+- **User-Friendly Interface:** A clean and intuitive interface for managing your tracked products.
 
-## 🧰 Tech Stack
+## 🛠️ Tech Stack
 
-| Layer       | Tool                         |
-|-------------|------------------------------|
-| Backend API | FastAPI                      |
-| Scraping    | `requests`, `BeautifulSoup`  |
-| Database    | PostgreSQL (via Railway)     |
-| Scheduler   | `APScheduler`                |
-| Email       | Gmail SMTP (App Password)    |
-| Hosting     | Railway                      |
-| Docs        | FastAPI Swagger UI           |
+### Backend
 
----
+| Tool | Description |
+|---|---|
+| **FastAPI** | A modern, fast (high-performance), web framework for building APIs with Python. |
+| **SQLAlchemy** | The Python SQL toolkit and Object Relational Mapper. |
+| **PostgreSQL** | A powerful, open source object-relational database system. |
+| **Selenium** | An umbrella project for a range of tools and libraries that enable and support the automation of web browsers. |
+| **uvicorn** | A lightning-fast ASGI server implementation. |
 
-## ⚙️ Setup Instructions
+### Frontend
 
-### 1. Clone the repo
+| Tool | Description |
+|---|---|
+| **React** | A JavaScript library for building user interfaces. |
+| **Vite** | A build tool that aims to provide a faster and leaner development experience for modern web projects. |
+| **TypeScript** | A typed superset of JavaScript that compiles to plain JavaScript. |
+| **Tailwind CSS** | A utility-first CSS framework for rapidly building custom designs. |
+| **daisyUI** | A Tailwind CSS component library. |
+| **axios** | A promise-based HTTP client for the browser and Node.js. |
+| **React Router** | A standard library for routing in React. |
 
-```bash
-git clone https://github.com/yourusername/price-tracker-api.git
-cd price-tracker-api
-````
+## 🏁 Getting Started
 
-### 2. Create `.env` file
+### Prerequisites
 
-```
-EMAIL_ADDRESS=your_gmail@gmail.com
-EMAIL_PASSWORD=your_app_password
-DATABASE_URL=postgresql://user:pass@host:port/dbname
-```
+- Python 3.9+
+- Node.js 16+
+- PostgreSQL
 
-> 📌 Use a Gmail App Password: [https://support.google.com/accounts/answer/185833](https://support.google.com/accounts/answer/185833)
+### Installation
 
-### 3. Install dependencies
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd PricePulse
+    ```
 
-```bash
-pip install -r requirements.txt
-```
+2.  **Backend Setup:**
+    ```bash
+    cd backend
+    pip install -r requirements.txt
+    ```
+    Create a `.env` file in the `backend` directory and add the following environment variables:
+    ```
+    DATABASE_URL="postgresql://user:password@host:port/database"
+    SECRET_KEY="your-secret-key"
+    ALGORITHM="HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES=30
+    ```
 
-### 4. Initialize the database
+3.  **Frontend Setup:**
+    ```bash
+    cd frontend
+    npm install
+    ```
 
-```python
-from app.database import Base, engine
-Base.metadata.create_all(bind=engine)
-```
+## 🏃‍♀️ Usage
 
-### 5. Run the API
+1.  **Run the backend server:**
+    From the `backend` directory, run:
+    ```bash
+    uvicorn app.main:app --reload
+    ```
+    The backend will be running on `http://localhost:8000`.
 
-```bash
-uvicorn app.main:app --reload
-```
+2.  **Run the frontend development server:**
+    From the `frontend` directory, run:
+    ```bash
+    npm run dev
+    ```
+    The frontend will be running on `http://localhost:5173`.
 
-Visit: [http://localhost:8000/docs](http://localhost:8000/docs)
+## 🗺️ Roadmap
 
----
+- [ ] **Email Notifications:** Implement a system to send email alerts to users when a product's price drops below a certain threshold.
+- [ ] **Scheduled Scraping:** Add a scheduler to automatically check for price updates at regular intervals.
+- [ ] **Docker Support:** Create a `Dockerfile` for easier deployment.
+- [ ] **More Retailers:** Add support for more online retailers.
 
-## 🐳 Run with Docker
+## 📄 License
 
-```bash
-docker build -t price-tracker .
-docker run -p 8000:8000 --env-file .env price-tracker
-```
-
----
-
-## 🔁 Run Scheduler (price checker)
-
-```bash
-python -m app.scheduler
-```
-
----
-
-## 🧪 Run Tests
-
-```bash
-pytest
-```
-
----
-
-## 📦 API Endpoints
-
-| Method | Endpoint                 | Description              |
-| ------ | ------------------------ | ------------------------ |
-| POST   | `/products`              | Start tracking a product |
-| GET    | `/products/{id}`         | Get product info         |
-| GET    | `/products/{id}/history` | View price history       |
-| POST   | `/alerts`                | Create a price alert     |
-
-
-
--- Created with ChatGPT (given the outline of the project) for now.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
