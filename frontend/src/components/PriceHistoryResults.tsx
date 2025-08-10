@@ -20,7 +20,7 @@ const PriceHistoryResults: React.FC<PriceHistoryResultsProps> = ({
     }
 
     return (
-        <div className="mt-8">
+        <div className="mt-8" data-testid="price-history-results">
             <div className="overflow-x-auto">
                 <div className="flex text-white font-semibold border-b border-gray-700 pb-2 mb-2 min-w-max">
                     <div className="flex-1 px-2">Id</div>
