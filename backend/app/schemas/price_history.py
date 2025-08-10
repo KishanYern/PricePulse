@@ -18,6 +18,7 @@ class PriceHistoryOut(BaseModel):
 
 class ReturnSearchHistoryModel(BaseModel):
     id: int
+    user_email: str | None = Field(None, alias="userEmail")
     name: str | None = Field(None, alias="productName")
     product_id: int = Field(..., alias="productId")
     price: float

@@ -1,6 +1,7 @@
 // Define the shape of a single price history record
 export interface PriceHistoryItem {
     id: number;
+    userEmail: string;
     productName: string;
     productId: number;
     price: number;

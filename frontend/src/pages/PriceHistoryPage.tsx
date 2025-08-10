@@ -49,7 +49,9 @@ const PriceHistoryPage = () => {
                 params: {
                     product_id: productId,
                     name: productName,
-                    notifications: notifications
+                    notifications: notifications,
+                    user_filter: userFilter,
+                    admin: isAdmin
                 },
                 withCredentials: true
             });
