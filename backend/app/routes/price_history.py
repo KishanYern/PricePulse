@@ -4,7 +4,6 @@ from app.database import get_db
 from app.models import PriceHistory, Product, User, UserProduct
 from app.auth import get_current_user
 from app.schemas.price_history import ReturnSearchHistoryModel, NotificationFilter
-import itertools
 from typing import Optional
 
 router = APIRouter(
@@ -16,6 +15,8 @@ router = APIRouter(
 def get_product_price_history(product_id: Optional[int | str],
                               name: Optional[str],
                               notifications: NotificationFilter,
+                              user_filter: Optional[int] = None,
+                              admin: Optional[bool] = None,
                               db: Session = Depends(get_db), 
                               current_user: User = Depends(get_current_user)):
     """
@@ -26,6 +27,7 @@ def get_product_price_history(product_id: Optional[int | str],
 
     # Get the columns based on output model
     query = db.query(PriceHistory.id, 
+                     User.email.label('user_email'),
                      Product.name, 
                      Product.id.label('product_id'), 
                      PriceHistory.price, 
@@ -34,9 +36,15 @@ def get_product_price_history(product_id: Optional[int | str],
                      UserProduct.notify.label('notifications')).\
     join(Product, PriceHistory.product_id == Product.id).\
     join(UserProduct, UserProduct.product_id == Product.id).\
-    filter(
-        UserProduct.user_id == current_user.id
-    )
+    join(User, User.id == UserProduct.user_id)
+
+    # Only admin users can see all price history or filter by user
+    if not getattr(current_user, "admin", False):
+        query = query.filter(UserProduct.user_id == current_user.id)
+    else:
+        if user_filter is not None:
+            query = query.filter(UserProduct.user_id == user_filter)
+
     if product_id is not None:
         query = query.filter(PriceHistory.product_id == product_id)
     if name:
