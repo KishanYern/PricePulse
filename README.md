@@ -24,6 +24,7 @@ PricePulse is a full-stack web application that allows you to track product pric
 | **PostgreSQL** | A powerful, open source object-relational database system. |
 | **Selenium** | An umbrella project for a range of tools and libraries that enable and support the automation of web browsers. |
 | **uvicorn** | A lightning-fast ASGI server implementation. |
+| **APScheduler** | A Python library for in-process task scheduling. |
 
 ### Frontend
 
@@ -88,10 +89,14 @@ PricePulse is a full-stack web application that allows you to track product pric
     ```
     The frontend will be running on `http://localhost:5173`.
 
+## 🕒 Scheduled Tasks
+
+PricePulse includes a background task that automatically updates the prices of all tracked products every 6 hours. This ensures that the price data stays current without requiring manual intervention. The scheduler is automatically started when you run the backend server.
+
 ## 🗺️ Roadmap
 
 - [ ] **Email Notifications:** Implement a system to send email alerts to users when a product's price drops below a certain threshold.
-- [ ] **Scheduled Scraping:** Add a scheduler to automatically check for price updates at regular intervals.
+- [x] **Scheduled Scraping:** Add a scheduler to automatically check for price updates at regular intervals.
 - [ ] **Docker Support:** Create a `Dockerfile` for easier deployment.
 - [ ] **More Retailers:** Add support for more online retailers.
 
