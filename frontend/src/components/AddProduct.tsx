@@ -56,6 +56,7 @@ export const AddProduct = ({ onProductAdded }: AddProductProps) => {
                     console.error(response.data);
                 }
                 setLoading(false);
+                return; // Stop execution after handling the error
             }
 
             console.log("Product added:", response.data);
@@ -154,7 +155,7 @@ export const AddProduct = ({ onProductAdded }: AddProductProps) => {
                 </p>
                 <div className='mb-4'>
                     {loading ? (
-                        <span className='btn btn-primary loading loading-spinner loading-lg text-primary'></span>
+                        <span role="progressbar" aria-label="loading" className='btn btn-primary loading loading-spinner loading-lg text-primary'></span>
                     ) : (
                         <button type='submit' className='btn btn-primary'>
                             Add Product

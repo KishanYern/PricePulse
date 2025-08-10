@@ -103,7 +103,6 @@ const LoginForm: React.FC = () => {
                         className={`input input-bordered w-full pr-10 ${
                             errors.email ? "input-error" : ""
                         }`}
-                        required
                     />
                     <div className='absolute inset-y-0 right-0 flex items-center pr-3'>
                         <svg
@@ -145,7 +144,6 @@ const LoginForm: React.FC = () => {
                         className={`input input-bordered w-full pr-10 ${
                             errors.password ? "input-error" : ""
                         }`}
-                        required
                     />
                     <button
                         type='button'
