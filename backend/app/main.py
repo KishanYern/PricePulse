@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
 
     # Start the background scheduler
     print("Starting background scheduler...")
-    scheduler.add_job(update_product_prices_job, "cron", hours='*/6', id="update_product_prices_job")
+    scheduler.add_job(update_product_prices_job, "cron", hour='*/6', id="update_product_prices_job")
     scheduler.start()
     
     yield
