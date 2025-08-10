@@ -1,7 +1,7 @@
 import React, { ReactElement } from "react";
 import { render, RenderOptions } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { AuthContext } from "../AuthContext";
+import { AuthContext, AuthState } from "../AuthContext";
 
 // Mock implementation of the User type
 interface User {
@@ -10,19 +10,11 @@ interface User {
     admin: boolean;
 }
 
-// Define the shape of the mock auth state
-interface MockAuthState {
-    isAuthenticated: boolean;
-    user: User | null;
-    isLoading: boolean;
-    login: () => Promise<User>;
-    logout: () => void;
-}
-
 // Default mock state for the AuthContext
-const defaultMockAuth: MockAuthState = {
+const defaultMockAuth: AuthState = {
     isAuthenticated: false,
     user: null,
+    isAdmin: false,
     isLoading: false,
     login: async () => ({ id: 1, email: "test@example.com", admin: false }),
     logout: () => {},
@@ -35,10 +27,16 @@ const renderWithProviders = (
         // Allow overriding the mock auth state for specific tests
         mockAuth = {},
         ...renderOptions
-    }: { mockAuth?: Partial<MockAuthState> } & Omit<RenderOptions, "wrapper"> = {}
+    }: { mockAuth?: Partial<AuthState> } & Omit<RenderOptions, "wrapper"> = {}
 ) => {
     // Combine the default mock auth state with any overrides
     const authValue = { ...defaultMockAuth, ...mockAuth };
+
+    // If a user is provided in the mock, set isAuthenticated and isAdmin accordingly
+    if (mockAuth.user) {
+        authValue.isAuthenticated = true;
+        authValue.isAdmin = mockAuth.user.admin;
+    }
 
     // Define the wrapper component with all necessary providers
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
