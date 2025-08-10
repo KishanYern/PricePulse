@@ -28,12 +28,12 @@ def update_product_prices_job():
             if scraped_data:
                 # Update the product details
                 product.name = scraped_data['name']
-                product.current_price = scraped_data['price']
+                product.current_price = scraped_data['current_price']
 
-                if product.lowest_price is None or scraped_data['price'] < product.lowest_price:
-                    product.lowest_price = scraped_data['price']
-                if product.highest_price is None or scraped_data['price'] > product.highest_price:
-                    product.highest_price = scraped_data['price']
+                if product.lowest_price is None or scraped_data['current_price'] < product.lowest_price:
+                    product.lowest_price = scraped_data['current_price']
+                if product.highest_price is None or scraped_data['current_price'] > product.highest_price:
+                    product.highest_price = scraped_data['current_price']
                 
                 product.last_updated = datetime.now(timezone.utc)
 

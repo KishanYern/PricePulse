@@ -5,6 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 import contextlib # Import contextlib for lifespan management
 from app.config import ALLOWED_CORS_ORIGINS
+from datetime import datetime, timezone, timedelta
 
 # CRON Jobs
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -36,7 +37,7 @@ async def lifespan(app: FastAPI):
 
     # Start the background scheduler
     print("Starting background scheduler...")
-    scheduler.add_job(update_product_prices_job, "interval", hour=2, minutes=0)
+    scheduler.add_job(update_product_prices_job, "cron", hours='*/6', id="update_product_prices_job")
     scheduler.start()
     
     yield
