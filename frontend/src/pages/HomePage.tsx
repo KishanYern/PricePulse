@@ -3,6 +3,7 @@ import axios from "axios";
 import type { Product } from "../types/Product";
 import { AddProduct } from "../components/AddProduct";
 import { useAuth } from "../AuthContext"; // Import the AuthContext
+import { Link } from "react-router";
 
 const Home: React.FC = () => {
     const { isAuthenticated, user, isLoading } = useAuth(); // Get the user from AuthContext
@@ -87,8 +88,14 @@ const Home: React.FC = () => {
                             className='card bg-base-100 w-96 shadow-sm hover:shadow-lg transition-shadow duration-200 hover:scale-105'
                             key={product.id}
                         >
-                            <div className='card-body'>
-                                <h2 className='card-title'>{product.name}</h2>
+                            <Link to={`/product/${product.id}`} className='card-body'>
+                                <h2 className='card-title'>
+                                    {
+                                    product.name.length > 50
+                                        ? product.name.slice(0, 50) + "..."
+                                        : product.name
+                                    }
+                                </h2>
                                 <p>
                                     Product ID: {product.id}
                                 </p>
@@ -105,29 +112,6 @@ const Home: React.FC = () => {
                                     {product.highestPrice?.toFixed(2) || "N/A"}
                                 </p>
                                 {
-                                    product.notes && (
-                                        <p>
-                                            Notes: {product.notes}
-                                        </p>
-                                    )
-                                }
-                                {
-                                    product.lowerThreshold && (
-                                        <p>
-                                            Lower Threshold: $
-                                            {product.lowerThreshold.toFixed(2)}
-                                        </p>
-                                    )
-                                }
-                                {
-                                    product.upperThreshold && (
-                                        <p>
-                                            Upper Threshold: $
-                                            {product.upperThreshold.toFixed(2)}
-                                        </p>
-                                    )
-                                }
-                                {
                                     product.notify ? (
                                         <p className='text-green-500'>
                                             Notifications Enabled
@@ -135,13 +119,6 @@ const Home: React.FC = () => {
                                     ) : (
                                         <p className='text-red-500'>
                                             Notifications Disabled
-                                        </p>
-                                    )
-                                }
-                                {
-                                    product.source && (
-                                        <p>
-                                            Source: {product.source}
                                         </p>
                                     )
                                 }
@@ -162,7 +139,7 @@ const Home: React.FC = () => {
                                         </button>
                                     </a>
                                 </div>
-                            </div>
+                            </Link>
                         </div>
                     ))}
                 </ul>

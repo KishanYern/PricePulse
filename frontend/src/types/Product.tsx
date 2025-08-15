@@ -10,6 +10,7 @@ export interface Product {
     upperThreshold: number | null;
     notify: boolean;
     source: string | null;
+    imageUrl: string | null;
     createdAt: string;
     lastChecked: string;
 }

@@ -50,6 +50,7 @@ def _create_product_internal(product_data: ProductCreate, db: Session) -> Produc
         lowest_price=scraped_data["current_price"],
         highest_price=scraped_data["current_price"],
         source=product_data.source,
+        image_url=scraped_data["image_url"],
         created_at=now,
         last_checked=now
     )
@@ -85,6 +86,12 @@ def get_product(product_id: int, db: Session = Depends(get_db), current_user: Us
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
+    # Ensure the user has access to this product
+    if not current_user.admin:
+        user_product = db.query(UserProduct).filter(UserProduct.product_id == product_id, UserProduct.user_id == current_user.id).first()
+        if not user_product:
+            raise HTTPException(status_code=403, detail="You do not have permission to access this product")
+
     # Get the other data for this product
     user_product = db.query(UserProduct).filter(UserProduct.product_id == product_id, UserProduct.user_id == current_user.id).first()
     if not user_product:
@@ -103,6 +110,7 @@ def get_product(product_id: int, db: Session = Depends(get_db), current_user: Us
         upperThreshold=user_product.upper_threshold,
         notify=user_product.notify,
         source=product.source,
+        imageUrl=product.image_url,
         createdAt=product.created_at,
         lastChecked=product.last_checked
     )
@@ -253,6 +261,7 @@ def update_product(product_id: int, product: ProductCreate, db: Session = Depend
         existing_product.lowest_price = scraped_data["current_price"]
     if existing_product.highest_price is None or scraped_data["current_price"] > existing_product.highest_price:
         existing_product.highest_price = scraped_data["current_price"]
+    existing_product.image_url = scraped_data["image_url"]
     existing_product.last_checked = datetime.now(timezone.utc)
 
     # Create a new entry in the price history

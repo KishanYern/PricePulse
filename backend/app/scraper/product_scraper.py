@@ -25,7 +25,6 @@ def scrape_product_data(product_url: str) -> Optional[Dict[str, Any]]:
     options.add_argument('--disable-gpu')
     options.add_argument('--disable-extensions')
     options.add_argument('--disable-plugins')
-    options.add_argument('--disable-images')
     options.add_argument('--disable-css') # Don't load CSS
     options.add_argument('--disable-javascript') # Don't load JavaScript
     options.add_argument('--disable-web-security')
@@ -150,6 +149,30 @@ def scrape_product_data(product_url: str) -> Optional[Dict[str, Any]]:
             except Exception:
                 continue
         
+        # Trying to scrape the product image url
+        logger.info("Attempting to scrape product image URL...")
+        image_selectors = [
+            (By.CSS_SELECTOR, "#a-dynamic-image"),
+            (By.CSS_SELECTOR, ".a-dynamic-image"),
+            (By.CSS_SELECTOR, "#product-image"),
+            (By.CSS_SELECTOR, "#landingImage"),
+            (By.CSS_SELECTOR, ".product-image"),
+            (By.CSS_SELECTOR, "[data-testid='product-image']"),
+        ]
+
+        product_image_url = None
+        for selector_type, selector_value in image_selectors:
+            try:
+                image_element = wait.until(
+                    EC.presence_of_element_located((selector_type, selector_value))
+                )
+                product_image_url = image_element.get_attribute("src")
+                if product_image_url:
+                    logger.info(f"Found image URL using selector: {selector_type}={selector_value}")
+                    logger.info(f"Product image URL: {product_image_url}")
+                    break
+            except TimeoutException:
+                continue
         logger.info(f"Successfully scraped: {product_title[:50]}...")
 
         if current_price_whole is None:
@@ -162,15 +185,16 @@ def scrape_product_data(product_url: str) -> Optional[Dict[str, Any]]:
             current_price = current_price_whole
         else:
             current_price = current_price_whole + (current_price_fraction / 100)
-        
-        # Make the product title more readable if over 50 characters
-        if len(product_title) > 50:
-            product_title = product_title[:50] + "..."
+
+        # Make the product title more readable if over 255 characters
+        if len(product_title) > 255:
+            product_title = product_title[:255] + "..."
 
         # Return the scraped data
         return {
             "name": product_title,
             "url": product_url,
+            "image_url": product_image_url,
             "current_price": current_price,
         }
         
@@ -190,7 +214,6 @@ def scrape_product_data(product_url: str) -> Optional[Dict[str, Any]]:
                 driver.quit()
             except Exception as e:
                 logger.error(f"Error closing driver: {e}")
-
 
 if __name__ == "__main__":
     # Example usage
