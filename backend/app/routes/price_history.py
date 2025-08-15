@@ -32,7 +32,7 @@ def get_product_price_history(product_id: Optional[int | str],
                      Product.id.label('product_id'), 
                      PriceHistory.price, 
                      PriceHistory.timestamp, 
-                     PriceHistory.source, 
+                     Product.source, 
                      UserProduct.notify.label('notifications')).\
     join(Product, PriceHistory.product_id == Product.id).\
     join(UserProduct, UserProduct.product_id == Product.id).\

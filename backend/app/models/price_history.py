@@ -1,5 +1,5 @@
 from app.database import Base
-from sqlalchemy import ForeignKey, String, DateTime, Float, func
+from sqlalchemy import ForeignKey, DateTime, Float, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 
@@ -14,7 +14,6 @@ class PriceHistory(Base):
         nullable=False,
         insert_default=func.now()
     )
-    source: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Relationships
     product = relationship("Product", back_populates="price_history")

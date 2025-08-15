@@ -9,6 +9,7 @@ export interface Product {
     lowerThreshold: number | null;
     upperThreshold: number | null;
     notify: boolean;
+    source: string | null;
     createdAt: string;
     lastChecked: string;
 }

@@ -43,6 +43,7 @@ def _create_product_internal(product_data: ProductCreate, db: Session) -> Produc
         current_price=scraped_data["current_price"],
         lowest_price=scraped_data["current_price"],
         highest_price=scraped_data["current_price"],
+        source=product_data.source,
         created_at=now,
         last_checked=now
     )
@@ -55,7 +56,6 @@ def _create_product_internal(product_data: ProductCreate, db: Session) -> Produc
         product_id=new_product.id,
         price=scraped_data["current_price"],
         timestamp=now,
-        source=product_data.source if product_data.source else None
     )
 
     db.add(price_history)
@@ -96,6 +96,7 @@ def get_product(product_id: int, db: Session = Depends(get_db), current_user: Us
         lowerThreshold=user_product.lower_threshold,
         upperThreshold=user_product.upper_threshold,
         notify=user_product.notify,
+        source=product.source,
         createdAt=product.created_at,
         lastChecked=product.last_checked
     )
@@ -148,6 +149,7 @@ def get_user_products(user_id: int, db: Session = Depends(get_db), current_user:
                 lowerThreshold=user_product_entry.lower_threshold,
                 upperThreshold=user_product_entry.upper_threshold,
                 notify=user_product_entry.notify,
+                source=product.source,
                 createdAt=product.created_at,
                 lastChecked=product.last_checked
             ))
@@ -203,6 +205,7 @@ def create_product(user_product_data: UserCreateProduct, db: Session = Depends(g
             lowerThreshold=user_product_entry.lower_threshold,
             upperThreshold=user_product_entry.upper_threshold,
             notify=user_product_entry.notify,
+            source=product.source,
             createdAt=product.created_at,
             lastChecked=product.last_checked,
         )
@@ -248,7 +251,6 @@ def update_product(product_id: int, product: ProductCreate, db: Session = Depend
         product_id=existing_product.id,
         price=scraped_data["current_price"],
         timestamp=datetime.now(timezone.utc),
-        source=product.source if product.source else None
     )
 
     db.add(price_history)

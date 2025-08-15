@@ -138,6 +138,13 @@ const Home: React.FC = () => {
                                         </p>
                                     )
                                 }
+                                {
+                                    product.source && (
+                                        <p>
+                                            Source: {product.source}
+                                        </p>
+                                    )
+                                }
                                 <p>
                                     Last Checked:{" "}
                                     {new Date(
