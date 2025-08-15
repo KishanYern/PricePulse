@@ -85,17 +85,29 @@ def get_product(product_id: int, db: Session = Depends(get_db), current_user: Us
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    
-    # Ensure the user has access to this product
-    if not current_user.admin:
-        user_product = db.query(UserProduct).filter(UserProduct.product_id == product_id, UserProduct.user_id == current_user.id).first()
-        if not user_product:
-            raise HTTPException(status_code=403, detail="You do not have permission to access this product")
 
     # Get the other data for this product
     user_product = db.query(UserProduct).filter(UserProduct.product_id == product_id, UserProduct.user_id == current_user.id).first()
     if not user_product:
-        raise HTTPException(status_code=404, detail="No user product found for this product")
+        if current_user.admin:
+            return ProductOut(
+                id=product.id,
+                url=product.url,
+                name=product.name,
+                currentPrice=product.current_price,
+                lowestPrice=product.lowest_price,
+                highestPrice=product.highest_price,
+                notes=None,
+                lowerThreshold=None,
+                upperThreshold=None,
+                notify=False,
+                source=product.source,
+                imageUrl=product.image_url,
+                createdAt=product.created_at,
+                lastChecked=product.last_checked
+            )
+        else:
+            raise HTTPException(status_code=403, detail="You do not have permission to access this product")
 
     # Return the product with user-specific details
     return ProductOut(
@@ -164,6 +176,7 @@ def get_user_products(user_id: int, db: Session = Depends(get_db), current_user:
                 upperThreshold=user_product_entry.upper_threshold,
                 notify=user_product_entry.notify,
                 source=product.source,
+                imageUrl=product.image_url,
                 createdAt=product.created_at,
                 lastChecked=product.last_checked
             ))

@@ -72,7 +72,7 @@ export const AddProduct = ({ onProductAdded }: AddProductProps) => {
     };
 
     return (
-        <div className='p-6 rounded-lg shadow-md'>
+        <div className='p-6'>
             <h2 className='text-lg font-bold mb-4 text-gray-300'>Add Product</h2>
             <form onSubmit={handleSubmit}>
                 <input
