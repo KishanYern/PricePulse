@@ -20,15 +20,21 @@ router = APIRouter(
 )
 
 # Helper function to create a product
-def _create_product_internal(product_data: ProductCreate, db: Session) -> Product | ProductStatus:
+def _create_product_internal(product_data: ProductCreate, db: Session) -> Product | tuple[ProductStatus, Product] | ProductStatus:
     """
     Internal helper function to create a new product and its initial price history.
     Does not handle user association or HTTP exceptions directly.
+    Returns:
+        - Product if created successfully
+        - (ProductStatus.PRODUCT_EXISTS, existing_product) if product exists
+        - ProductStatus.PRODUCT_SCRAPER_FAILED if scraping fails
     """
     # Check if product with the same URL already exists
     existing_product = db.query(Product).filter(Product.url == str(product_data.url)).first()
+
+    # If the product already exists, return the enum type exists and the product itself
     if existing_product:
-        return ProductStatus.PRODUCT_EXISTS
+        return (ProductStatus.PRODUCT_EXISTS, existing_product)
 
     # Call the web scraping function to get the product details
     scraped_data = scrape_product_data(str(product_data.url))
@@ -161,23 +167,26 @@ def create_product(user_product_data: UserCreateProduct, db: Session = Depends(g
     """
     Create a new product associated with the authenticated user.
     """
-    # Use the current_user's ID, not the one from the request body
-    user_id_to_associate = current_user.id
 
     # Start a transaction to ensure atomicity
     # All database operations within this block will be committed or rolled back together.
     try:
         #Create the base Product and PriceHistory
-        product = _create_product_internal(user_product_data.product, db)
+        product_result = _create_product_internal(user_product_data.product, db)
 
-        if product is ProductStatus.PRODUCT_EXISTS:
-            raise HTTPException(status_code=400, detail="Product already exists")
-        elif product is ProductStatus.PRODUCT_SCRAPER_FAILED:
+        # Return cases
+        if isinstance(product_result, tuple) and product_result[0] is ProductStatus.PRODUCT_EXISTS:
+            product = product_result[1]
+        elif product_result is ProductStatus.PRODUCT_SCRAPER_FAILED:
             raise HTTPException(status_code=400, detail="Failed to scrape product data")
+        elif isinstance(product_result, Product):
+            product = product_result
+        else:
+            raise HTTPException(status_code=500, detail="Unexpected product creation result")
 
         # Associate the product with the user
         user_product_entry = UserProduct(
-            user_id=user_id_to_associate,
+            user_id=current_user.id,
             product_id=product.id,
             notes=user_product_data.notes,
             notify=user_product_data.notify,
