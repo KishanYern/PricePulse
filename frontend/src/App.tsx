@@ -6,6 +6,7 @@ import Home from "./pages/HomePage";
 import Login from "./pages/LoginPage";
 import Register from "./pages/RegistrationPage";
 import PriceHistoryPage from "./pages/PriceHistoryPage";
+import ProductPage from "./pages/ProductPage";
 
 // Define the paths in an array
 const homePaths = ["/", "/home"];
@@ -35,6 +36,13 @@ const App = () => {
                         <ProtectedRoute>
                             <MainLayout>
                                 <PriceHistoryPage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/product/:productId" element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <ProductPage />
                             </MainLayout>
                         </ProtectedRoute>
                     } />

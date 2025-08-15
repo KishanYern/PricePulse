@@ -1,173 +1,151 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
-import type { Product } from "../types/Product";
+import { useAuth } from "../AuthContext";
 import { AddProduct } from "../components/AddProduct";
-import { useAuth } from "../AuthContext"; // Import the AuthContext
+import ProductCard from "../components/ProductCard";
+import type { Product } from "../types/Product";
+
+// Icons
+import { FaPlus } from "react-icons/fa";
+import { IoMdClose } from "react-icons/io";
 
 const Home: React.FC = () => {
-    const { isAuthenticated, user, isLoading } = useAuth(); // Get the user from AuthContext
-    const [showAddProduct, setShowAddProduct] = useState(false);
+    const { isAuthenticated, user, isLoading } = useAuth();
     const [products, setProducts] = useState<Product[]>([]);
-    const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+    const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
+    // State for the modal
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
-        const fetchData: () => Promise<void> = async () => {
-            console.log(user);
-            if(isLoading || !user) {
-                console.error("User data is not available.");
-                return;
-            }
+        const fetchData = async () => {
+            if (isLoading || !user) return;
 
             setIsLoadingProducts(true);
             try {
                 const response = await axios.get(
                     `http://localhost:8000/products/${user.id}/user-products`,
-                    {
-                        withCredentials: true, // Ensure cookies are sent with the request
-                    }
+                    { withCredentials: true }
                 );
-
-                if(!Array.isArray(response.data)) {
-                    console.error("Expected an array of products, but received:", response.data);
-                    setProducts([]);
-                    return;
-                }
-                setProducts(response.data);
+                setProducts(Array.isArray(response.data) ? response.data : []);
+                console.log("Fetched products:", response.data);
             } catch (error) {
                 console.error("Error fetching data:", error);
+                setProducts([]);
             } finally {
                 setIsLoadingProducts(false);
             }
         };
 
-        if(isAuthenticated && user && !isLoading) {
+        if (isAuthenticated && user && !isLoading) {
             fetchData();
+        } else if (!isLoading) {
+            setIsLoadingProducts(false);
         }
     }, [isAuthenticated, user, isLoading]);
 
-    if (isLoadingProducts) {
+    const handleProductAdded = (newProduct: Product) => {
+        setProducts((prevProducts) => [newProduct, ...prevProducts]);
+        setIsModalOpen(false); // Close modal on success
+    };
+
+    if (isLoading || isLoadingProducts) {
         return (
-            <div className='flex items-center justify-center min-h-screen'>
-                <p className='text-white'>Loading products...</p>
+            <div className="flex items-center justify-center min-h-screen bg-base-200">
+                <span className="loading loading-ball loading-lg text-primary"></span>
             </div>
         );
     }
 
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <p className="text-white text-lg">Please log in to view products.</p>
+            <div className="min-h-screen bg-base-200 flex items-center justify-center">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold">
+                        Welcome to PricePulse
+                    </h1>
+                    <p className="text-base-content/70 mt-2">
+                        Please log in to view and track your products.
+                    </p>
+                    <Link to="/login" className="btn btn-primary mt-6">
+                        Login
+                    </Link>
+                </div>
             </div>
         );
     }
 
-    const handleProductAdded = (newProduct: Product) => {
-        // when a new product is added, update the product list.
-        setProducts((prevProducts) => [...prevProducts, newProduct]);
-    };
-
     return (
-        <div className="bg-gray-900">
-            <div className="flex justify-between p-4">
-                <h1 className='text-2xl font-bold text-white'>Your Products</h1>
-                <button
-                    className='btn btn-primary'
-                    onClick={() => setShowAddProduct(!showAddProduct)}
-                >
-                    {showAddProduct ? "Hide Add Product" : "Add Product"}
-                </button>
-            </div>
-            {showAddProduct && (
-                <AddProduct onProductAdded={handleProductAdded} />
-            )}
-            <div className='min-h-screen bg-gradient-to-br from-primary to-secondary flex items-center justify-center p-4'>
-                <ul className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8'>
-                    {products.map((product) => (
-                        <div
-                            className='card bg-base-100 w-96 shadow-sm hover:shadow-lg transition-shadow duration-200 hover:scale-105'
-                            key={product.id}
-                        >
-                            <div className='card-body'>
-                                <h2 className='card-title'>{product.name}</h2>
-                                <p>
-                                    Product ID: {product.id}
-                                </p>
-                                <p>
-                                    Current Price: $
-                                    {product.currentPrice?.toFixed(2)}
-                                </p>
-                                <p>
-                                    Lowest Price: $
-                                    {product.lowestPrice?.toFixed(2) || "N/A"}
-                                </p>
-                                <p>
-                                    Highest Price: $
-                                    {product.highestPrice?.toFixed(2) || "N/A"}
-                                </p>
-                                {
-                                    product.notes && (
-                                        <p>
-                                            Notes: {product.notes}
-                                        </p>
-                                    )
-                                }
-                                {
-                                    product.lowerThreshold && (
-                                        <p>
-                                            Lower Threshold: $
-                                            {product.lowerThreshold.toFixed(2)}
-                                        </p>
-                                    )
-                                }
-                                {
-                                    product.upperThreshold && (
-                                        <p>
-                                            Upper Threshold: $
-                                            {product.upperThreshold.toFixed(2)}
-                                        </p>
-                                    )
-                                }
-                                {
-                                    product.notify ? (
-                                        <p className='text-green-500'>
-                                            Notifications Enabled
-                                        </p>
-                                    ) : (
-                                        <p className='text-red-500'>
-                                            Notifications Disabled
-                                        </p>
-                                    )
-                                }
-                                {
-                                    product.source && (
-                                        <p>
-                                            Source: {product.source}
-                                        </p>
-                                    )
-                                }
-                                <p>
-                                    Last Checked:{" "}
-                                    {new Date(
-                                        product.lastChecked
-                                    ).toLocaleDateString()}
-                                </p>
-                                <div className='card-actions justify-end'>
-                                    <a
-                                        href={product.url}
-                                        target='_blank'
-                                        rel='noopener noreferrer'
-                                    >
-                                        <button className='btn btn-primary'>
-                                            Buy Product!
-                                        </button>
-                                    </a>
-                                </div>
-                            </div>
+        <>
+            <div className="min-h-screen bg-base-200">
+                <div className="container mx-auto px-4 py-8">
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold">
+                                Your Tracked Products
+                            </h1>
+                            <p className="text-base-content/70 mt-1">
+                                You are currently tracking {products.length}{" "}
+                                items.
+                            </p>
                         </div>
-                    ))}
-                </ul>
+                        <button
+                            className="btn btn-primary btn-md shadow-lg"
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            <FaPlus />
+                            Add New Product
+                        </button>
+                    </div>
+
+                    {/* Products Grid */}
+                    {products.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {products.map((product) => (
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-20">
+                            <div className="text-5xl mb-4">🛒</div>
+                            <h2 className="text-2xl font-bold mb-2">
+                                Your list is empty!
+                            </h2>
+                            <p className="text-base-content/70 mb-6">
+                                Click "Add New Product" to start tracking
+                                prices.
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
+
+            {/* Add Product Modal */}
+            <dialog
+                id="add_product_modal"
+                className={`modal ${isModalOpen ? "modal-open" : ""}`}
+            >
+                <div className="modal-box w-11/12 max-w-2xl">
+                    <form method="dialog">
+                        <button
+                            className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                            onClick={() => setIsModalOpen(false)}
+                        >
+                            <IoMdClose size={24} />
+                        </button>
+                    </form>
+                    <AddProduct onProductAdded={handleProductAdded} />
+                </div>
+                <form method="dialog" className="modal-backdrop">
+                    <button onClick={() => setIsModalOpen(false)}>close</button>
+                </form>
+            </dialog>
+        </>
     );
 };
 

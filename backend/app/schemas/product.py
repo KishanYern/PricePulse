@@ -27,7 +27,8 @@ class ProductOut(BaseModel):
     lower_threshold: float | None = Field(None, alias="lowerThreshold")
     upper_threshold: float | None = Field(None, alias="upperThreshold")
     notify: bool = Field(True, alias="notify")
-    source: str | None = Field(None, alias="source")
+    source: str | None = Field(default=None, alias="source")
+    image_url: str | None = Field(default=None, alias="imageUrl")
     created_at: datetime = Field(..., alias="createdAt")
     last_checked: datetime = Field(..., alias="lastChecked")
 
