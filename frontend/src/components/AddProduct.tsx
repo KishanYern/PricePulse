@@ -66,6 +66,8 @@ export const AddProduct = ({ onProductAdded }: AddProductProps) => {
             onProductAdded(response.data); // Notify home page to add the new product to the list.
         } catch (error) {
             console.error("Error adding product:", error);
+            setLoading(false);
+            setError("Failed to add product. Please try again.");
         }
     };
 
