@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { FaArrowUp, FaArrowDown, FaEquals } from "react-icons/fa";
 import { MdImageNotSupported } from "react-icons/md";
 
