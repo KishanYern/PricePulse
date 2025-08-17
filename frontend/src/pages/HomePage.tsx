@@ -91,7 +91,6 @@ const Home: React.FC = () => {
 
     const handleUserManagementChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setUserHomePage(Number(event.target.value));
-        console.log("User management changed to:", Number(event.target.value));
     };
 
     if (isLoading || isLoadingProducts) {
