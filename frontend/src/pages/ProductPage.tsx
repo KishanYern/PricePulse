@@ -1,17 +1,50 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { FaArrowLeft, FaShoppingCart, FaChartLine, FaExclamationCircle } from "react-icons/fa";
 import { MdImageNotSupported } from "react-icons/md";
 
+// Charts
+import TimeSeriesChart from "../components/TimeSeriesChart";
+
 // Types
 import type { Product } from "../types/Product";
+import type { PriceHistoryItem } from "../types/PriceHistory";
+import type { ChartDataPoint } from "../types/Chart";
 
 const ProductPage: React.FC = () => {
     const { productId } = useParams<{ productId: string }>();
     const [product, setProduct] = useState<Product | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Chart Data
+    const [priceHistory, setPriceHistory] = useState<PriceHistoryItem[]>([]);
+    const [isLoadingChart, setIsLoadingChart] = useState(true);
+    const [errorChart, setErrorChart] = useState<string | null>(null);
+
+    // Fetch the product details when the component mounts
+    useEffect(() => {
+        const fetchPriceHistory = async () => {
+            setIsLoadingChart(true);
+            try {
+                const response = await axios.get(`http://localhost:8000/price-history/search-price-history`, {
+                    params: { product_id: productId },
+                    withCredentials: true,
+                });
+                setPriceHistory(response.data);
+                setErrorChart(null);
+                console.log(response.data);
+            } catch (error) {
+                console.error("Error fetching price history:", error);
+                setErrorChart("Failed to load price history. Please try again later.");
+            } finally {
+                setIsLoadingChart(false);
+            }
+        };
+
+        fetchPriceHistory();
+    }, [productId]);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -31,6 +64,13 @@ const ProductPage: React.FC = () => {
 
         fetchProduct();
     }, [productId]);
+
+    const chartData: ChartDataPoint[] = useMemo(() => {
+        return priceHistory.map(item => ({
+            timestamp: item.timestamp,
+            price: item.price,
+        }));
+    }, [priceHistory]);
 
     if (isLoading) {
         return (
@@ -78,7 +118,6 @@ const ProductPage: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Image and Main Details */}
                     <div className="lg:col-span-2">
                         <div className="card bg-base-100 shadow-xl">
                             <div className="card-body">
@@ -128,13 +167,26 @@ const ProductPage: React.FC = () => {
                     {/* Right Column: Price History and Actions */}
                     <div className="lg:col-span-1 space-y-8">
                         <div className="card bg-base-100 shadow-xl">
-                             <div className="card-body items-center text-center">
-                                <FaChartLine className="text-4xl text-accent"/>
-                                <h2 className="card-title">Price History Chart</h2>
-                                <p>A detailed chart showing the price history will be displayed here soon!</p>
-                                <div className="w-full h-48 bg-base-300 rounded-lg flex items-center justify-center mt-4">
-                                    <span className="text-base-content/50">Chart Placeholder</span>
-                                </div>
+                             <div className="card-body items-center">
+                                <h2 className="card-title mb-4">Price History</h2>
+                                {isLoadingChart ? (
+                                    <div className="flex justify-center items-center h-80">
+                                        <span className="loading loading-spinner text-primary"></span>
+                                    </div>
+                                ) : errorChart ? (
+                                    <div className="flex flex-col justify-center items-center h-80 text-center">
+                                         <FaExclamationCircle className="text-4xl text-error mb-4" />
+                                         <p className="text-error font-semibold">{errorChart}</p>
+                                    </div>
+                                ) : priceHistory.length > 0 ? (
+                                    <TimeSeriesChart data={chartData} />
+                                ) : (
+                                    <div className="flex flex-col justify-center items-center h-80 text-center">
+                                         <FaChartLine className="text-4xl text-base-content/50 mb-4"/>
+                                         <h2 className="card-title">No Price History</h2>
+                                         <p>There is no price history available for this product yet.</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                          <div className="card bg-base-100 shadow-xl">
