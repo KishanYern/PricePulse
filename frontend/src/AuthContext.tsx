@@ -2,12 +2,8 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-interface User {
-    id: number;
-    email: string;
-    admin: boolean;
-    // Add other user properties if needed
-}
+// types
+import type { User } from "./types/User";
 
 interface AuthContextType {
     isAuthenticated: boolean;
