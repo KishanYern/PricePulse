@@ -13,10 +13,9 @@ router = APIRouter(
 
 @router.get('/search-price-history', response_model=list[ReturnSearchHistoryModel])
 def get_product_price_history(product_id: Optional[int | str],
-                              name: Optional[str],
-                              notifications: NotificationFilter,
+                              name: Optional[str] = None,
+                              notifications: Optional[NotificationFilter] = None,
                               user_filter: Optional[int] = None,
-                              admin: Optional[bool] = None,
                               db: Session = Depends(get_db), 
                               current_user: User = Depends(get_current_user)):
     """
@@ -49,7 +48,7 @@ def get_product_price_history(product_id: Optional[int | str],
         query = query.filter(PriceHistory.product_id == product_id)
     if name:
         query = query.filter(Product.name.ilike(f"%{name}%"))
-    if notifications is not NotificationFilter.all:
+    if notifications is not None and notifications is not NotificationFilter.all:
         query = query.filter(UserProduct.notify == (True if notifications == NotificationFilter.enabled else False))
     query = query.order_by(PriceHistory.timestamp.desc())  # Order by timestamp descending
 
