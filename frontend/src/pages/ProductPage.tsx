@@ -34,7 +34,6 @@ const ProductPage: React.FC = () => {
                 });
                 setPriceHistory(response.data);
                 setErrorChart(null);
-                console.log(response.data);
             } catch (error) {
                 console.error("Error fetching price history:", error);
                 setErrorChart("Failed to load price history. Please try again later.");
