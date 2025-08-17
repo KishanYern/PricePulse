@@ -4,28 +4,50 @@ import axios from "axios";
 import { useAuth } from "../AuthContext";
 import { AddProduct } from "../components/AddProduct";
 import ProductCard from "../components/ProductCard";
+
+// types
 import type { Product } from "../types/Product";
+import type { User } from "../types/User";
 
 // Icons
 import { FaPlus } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
+import { TfiShoppingCart } from "react-icons/tfi";
 
 const Home: React.FC = () => {
     const { isAuthenticated, user, isLoading } = useAuth();
+    const [userHomePage, setUserHomePage] = useState<number>(0);
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+    const [users, setUsers] = useState<User[]>([]);
 
     // State for the modal
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    // Initialize the user home page
+    useEffect(() => {
+        if (!user) {
+            return;
+        }
+        if (user.admin){
+            setUserHomePage(0);
+        }
+        else {
+            setUserHomePage(user.id);
+        }
+    }, [user]);
+
+    // Fetch the user products
     useEffect(() => {
         const fetchData = async () => {
             if (isLoading || !user) return;
 
+            if (!user.admin && userHomePage === 0) return;
+
             setIsLoadingProducts(true);
             try {
                 const response = await axios.get(
-                    `http://localhost:8000/products/${user.id}/user-products`,
+                    `http://localhost:8000/products/${userHomePage}/user-products`,
                     { withCredentials: true }
                 );
                 setProducts(Array.isArray(response.data) ? response.data : []);
@@ -43,11 +65,33 @@ const Home: React.FC = () => {
         } else if (!isLoading) {
             setIsLoadingProducts(false);
         }
-    }, [isAuthenticated, user, isLoading]);
+    }, [isAuthenticated, user, isLoading, userHomePage]);
+
+    // Fetch all users for admin management
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const response = await axios.get("http://localhost:8000/users", {
+                    withCredentials: true,
+                });
+                setUsers(Array.isArray(response.data) ? response.data : []);
+            } catch (error) {
+                console.error("Error fetching users:", error);
+                setUsers([]);
+            }
+        };
+
+        fetchUsers();
+    }, []);
 
     const handleProductAdded = (newProduct: Product) => {
         setProducts((prevProducts) => [newProduct, ...prevProducts]);
         setIsModalOpen(false); // Close modal on success
+    };
+
+    const handleUserManagementChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setUserHomePage(Number(event.target.value));
+        console.log("User management changed to:", Number(event.target.value));
     };
 
     if (isLoading || isLoadingProducts) {
@@ -91,13 +135,28 @@ const Home: React.FC = () => {
                                 items.
                             </p>
                         </div>
-                        <button
-                            className="btn btn-primary btn-md shadow-lg"
-                            onClick={() => setIsModalOpen(true)}
-                        >
-                            <FaPlus />
-                            Add New Product
-                        </button>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                            <button
+                                className="btn btn-primary btn-md shadow-lg"
+                                onClick={() => setIsModalOpen(true)}
+                            >
+                                <FaPlus />
+                                Add New Product
+                            </button>
+                            {user?.admin && (
+                                <select className="select select-bordered" onChange={handleUserManagementChange} value={userHomePage}>
+                                    <option key={0} value={0}>
+                                        All Products
+                                    </option>
+                                        {users.map((user) => (
+                                            <option key={user.id} value={user.id}>
+                                                {user.email}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )
+                            }
+                        </div>
                     </div>
 
                     {/* Products Grid */}
@@ -112,7 +171,9 @@ const Home: React.FC = () => {
                         </div>
                     ) : (
                         <div className="text-center py-20">
-                            <div className="text-5xl mb-4">🛒</div>
+                            <div className="text-5xl mb-4 flex items-center justify-center">
+                                <TfiShoppingCart size={48} />
+                            </div>
                             <h2 className="text-2xl font-bold mb-2">
                                 Your list is empty!
                             </h2>

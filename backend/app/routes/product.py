@@ -134,16 +134,11 @@ def get_user_products(user_id: int, db: Session = Depends(get_db), current_user:
     """
 
     # Ensure the user is authenticated and has permission to access this data
-    if current_user.id != user_id:
+    if current_user.id != user_id and not current_user.admin:
         raise HTTPException(status_code=403, detail="You do not have permission to access this user's products")
 
-    # Get the User
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # If the user is an admin, return all products
-    if user.admin:
+    # If the user is an admin and is looking for all products, return all products
+    if current_user.admin and user_id == 0:
         return db.query(Product).all()
 
     # If the user is not an admin, return only their products
