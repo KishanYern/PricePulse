@@ -96,7 +96,7 @@ const Home: React.FC = () => {
     if (isLoading || isLoadingProducts) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-base-200">
-                <span className="loading loading-ball loading-lg text-primary"></span>
+                <span className="loading loading-ball loading-lg text-primary" data-testid="loading-spinner"></span>
             </div>
         );
     }
@@ -195,6 +195,7 @@ const Home: React.FC = () => {
                         <button
                             className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
                             onClick={() => setIsModalOpen(false)}
+                            data-testid="close-modal-button"
                         >
                             <IoMdClose size={24} />
                         </button>
