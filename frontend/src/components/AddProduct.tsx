@@ -159,7 +159,7 @@ export const AddProduct = ({ onProductAdded }: AddProductProps) => {
                     {loading ? (
                         <span role="progressbar" aria-label="loading" className='btn btn-primary loading loading-spinner loading-lg text-primary'></span>
                     ) : (
-                        <button type='submit' className='btn btn-primary'>
+                        <button type='submit' className='btn btn-primary' data-testid="add-product-submit-button">
                             Add Product
                         </button>
                     )}
