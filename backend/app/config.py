@@ -12,6 +12,9 @@ ALLOWED_CORS_ORIGINS_STR = os.getenv(
     "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
 )
 
+IPROYAL_PROXY_USERNAME = os.getenv("IPROYAL_PROXY_USERNAME")
+IPROYAL_PROXY_PASSWORD = os.getenv("IPROYAL_PROXY_PASSWORD")
+
 ALLOWED_CORS_ORIGINS = [
     origin.strip() for origin in ALLOWED_CORS_ORIGINS_STR.split(',') if origin.strip()
 ]
