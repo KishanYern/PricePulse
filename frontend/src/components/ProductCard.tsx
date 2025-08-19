@@ -9,24 +9,24 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
     const PriceIndicator = () => {
         // If prices are not available, set the icon to indicate that no change occured
         if (!product.lowestPrice || !product.highestPrice) {
-            return <FaEquals className="text-gray-500" />;
+            return <FaEquals className="text-gray-500" data-testid="price-indicator-equal" />;
         }
         // If the current price is equal to both the lowest and highest prices, indicate no change
         if (
             product.currentPrice === product.lowestPrice &&
             product.currentPrice === product.highestPrice
         ) {
-            return <FaEquals className="text-gray-500" />;
+            return <FaEquals className="text-gray-500" data-testid="price-indicator-equal" />;
         }
         // If the current price is equal to the lowest price, indicate we are at an all time (in respect to this website's history) low
         if (product.currentPrice === product.lowestPrice) {
-            return <FaArrowDown className="text-success" />;
+            return <FaArrowDown className="text-success" data-testid="price-indicator-down" />;
         }
         // If the current price is equal to the highest price, indicate we are at an all time (in respect to this website's history) high
         if (product.currentPrice === product.highestPrice) {
-            return <FaArrowUp className="text-error" />;
+            return <FaArrowUp className="text-error" data-testid="price-indicator-up" />;
         }
-        return <FaEquals className="text-gray-500" />;
+        return <FaEquals className="text-gray-500" data-testid="price-indicator-equal" />;
     };
 
     return (
@@ -42,7 +42,9 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
                         className="h-48 w-full object-cover"
                     />
                 ) : (
-                    <MdImageNotSupported className="h-48 w-full object-cover" />
+                    <div className="flex items-center justify-center h-48 w-full bg-gray-200">
+                        <MdImageNotSupported className="text-5xl text-gray-400" data-testid="image-placeholder" />
+                    </div>
                 )}
                 <div className="absolute top-2 right-2 badge badge-accent font-semibold">
                     {product.source}

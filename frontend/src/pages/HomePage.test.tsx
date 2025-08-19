@@ -4,114 +4,161 @@ import userEvent from '@testing-library/user-event';
 import axios from 'axios';
 import Home from './HomePage';
 import type { Product } from '../types/Product';
+import type { User } from '../types/User';
 
 // Mock axios
 vi.mock('axios');
 const mockedAxios = vi.mocked(axios, true);
 
-// Mock the AddProduct component to isolate HomePage logic
-vi.mock('../components/AddProduct', () => ({
-    AddProduct: vi.fn(({ onProductAdded }) => (
-        <div>
-            <h2>Add Product Form</h2>
-            <button onClick={() => onProductAdded({ id: 3, name: 'New Mock Product', url: 'http://new.com', lastChecked: new Date().toISOString() })}>
-                Add Mock Product
-            </button>
+// Mock child components
+vi.mock('../components/ProductCard', () => ({
+    __esModule: true,
+    default: ({ product }: { product: Product }) => (
+        <div data-testid={`product-card-${product.id}`}>
+            <h3>{product.name}</h3>
+            <p>${product.currentPrice?.toFixed(2)}</p>
         </div>
-    )),
+    ),
 }));
 
-const mockUser = { id: 1, email: 'user@example.com', admin: false };
 
+// Mock data
+const mockUser: User = { id: 1, email: 'user@example.com', admin: false };
+const mockAdmin: User = { id: 2, email: 'admin@example.com', admin: true };
 const mockProducts: Product[] = [
     { id: 1, name: 'Test Product 1', url: 'http://a.com', lastChecked: new Date().toISOString(), currentPrice: 100 },
     { id: 2, name: 'Test Product 2', url: 'http://b.com', lastChecked: new Date().toISOString(), currentPrice: 200 },
 ];
+const mockUsers: User[] = [mockUser, mockAdmin];
+
 
 describe('HomePage', () => {
     beforeEach(() => {
-        mockedAxios.get.mockClear();
+        mockedAxios.get.mockReset();
+        mockedAxios.post.mockReset();
+        // Default mock for products
+        mockedAxios.get.mockResolvedValue({ data: mockProducts });
     });
 
-    it('should show a loading state while fetching products', () => {
-        // Mock a pending promise
+    it('should show a loading state initially', () => {
+        // Since isLoading is controlled by two separate states, we'll mock the API to be pending
+        // and set the auth loading state to true to ensure the spinner appears.
         mockedAxios.get.mockImplementation(() => new Promise(() => {}));
-        render(<Home />, { mockAuth: { isAuthenticated: true, user: mockUser } });
-        expect(screen.getByText('Loading products...')).toBeInTheDocument();
+        render(<Home />, { mockAuth: { isAuthenticated: true, user: mockUser, isLoading: true } });
+        expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
     });
 
     it('should prompt to log in if the user is not authenticated', () => {
         render(<Home />, { mockAuth: { isAuthenticated: false, user: null } });
-        expect(screen.getByText('Please log in to view products.')).toBeInTheDocument();
+        expect(screen.getByText('Please log in to view and track your products.')).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /login/i })).toBeInTheDocument();
     });
 
     it('should fetch and display products for an authenticated user', async () => {
-        mockedAxios.get.mockResolvedValue({ data: mockProducts });
         render(<Home />, { mockAuth: { isAuthenticated: true, user: mockUser } });
 
-        // Wait for products to be loaded and displayed
-        expect(await screen.findByText('Test Product 1')).toBeInTheDocument();
-        expect(screen.getByText('Test Product 2')).toBeInTheDocument();
-        // Use regex to be resilient to whitespace around the price
-        expect(screen.getByText(/Current Price: \$\s*100\.00/)).toBeInTheDocument();
-        expect(screen.getByText(/Current Price: \$\s*200\.00/)).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Test Product 1')).toBeInTheDocument();
+            expect(screen.getByText('Test Product 2')).toBeInTheDocument();
+        });
 
-        // Verify axios was called correctly
+        expect(screen.getByText('$100.00')).toBeInTheDocument();
+        expect(screen.getByText('$200.00')).toBeInTheDocument();
+
         expect(mockedAxios.get).toHaveBeenCalledWith(
             `http://localhost:8000/products/${mockUser.id}/user-products`,
             { withCredentials: true }
         );
     });
 
-    it('should handle the case where there are no products', async () => {
+    it('should display an empty state message when there are no products', async () => {
         mockedAxios.get.mockResolvedValue({ data: [] });
         render(<Home />, { mockAuth: { isAuthenticated: true, user: mockUser } });
 
-        // Wait for loading to finish
         await waitFor(() => {
-            expect(screen.queryByText('Loading products...')).not.toBeInTheDocument();
+            expect(screen.getByText('Your list is empty!')).toBeInTheDocument();
+        });
+        expect(screen.queryByText('Test Product 1')).not.toBeInTheDocument();
+    });
+
+    it('should open the Add Product modal when the button is clicked', async () => {
+        mockedAxios.get.mockResolvedValue({ data: [] }); // Start with no products
+        render(<Home />, { mockAuth: { isAuthenticated: true, user: mockUser } });
+
+        const addProductButton = await screen.findByRole('button', { name: /add new product/i });
+
+        // Use a more specific selector for the modal if getByRole fails.
+        const modal = document.getElementById('add_product_modal');
+        expect(modal).not.toHaveClass('modal-open');
+
+        // Click to show modal
+        await userEvent.click(addProductButton);
+        expect(modal).toHaveClass('modal-open');
+        expect(screen.getByText('Add New Product')).toBeInTheDocument();
+
+        // Click close button to hide
+        const closeButton = screen.getByTestId('close-modal-button');
+        await userEvent.click(closeButton);
+
+        await waitFor(() => {
+            expect(modal).not.toHaveClass('modal-open');
+        });
+    });
+
+    it('should add a new product to the list when the form is submitted', async () => {
+        const newProduct = { id: 3, name: 'New Awesome Product', url: 'http://new.com', lastChecked: new Date().toISOString(), currentPrice: 150 };
+        mockedAxios.get.mockResolvedValue({ data: mockProducts });
+        mockedAxios.post.mockResolvedValue({ status: 201, data: newProduct });
+
+        render(<Home />, { mockAuth: { isAuthenticated: true, user: mockUser } });
+
+        await screen.findByText('Test Product 1');
+
+        // Open the modal
+        const addProductButton = screen.getByRole('button', { name: /add new product/i });
+        await userEvent.click(addProductButton);
+
+        // Fill out and submit the form
+        const urlInput = screen.getByPlaceholderText('Enter product URL');
+        await userEvent.type(urlInput, newProduct.url);
+
+        const submitButton = await screen.findByTestId('add-product-submit-button');
+        await userEvent.click(submitButton);
+
+        // The modal should close and the new product should be in the document
+        await waitFor(() => {
+            expect(screen.getByText(newProduct.name)).toBeInTheDocument();
         });
 
-        // Check that no product names are rendered
-        expect(screen.queryByText('Test Product 1')).not.toBeInTheDocument();
-        expect(screen.queryByText('Test Product 2')).not.toBeInTheDocument();
+        const modal = document.getElementById('add_product_modal');
+        expect(modal).not.toHaveClass('modal-open');
     });
 
-    it('should toggle the AddProduct form visibility', async () => {
-        mockedAxios.get.mockResolvedValue({ data: [] });
-        render(<Home />, { mockAuth: { isAuthenticated: true, user: mockUser } });
+    describe('Admin View', () => {
+        it('should show the user filter dropdown for admin users', async () => {
+            mockedAxios.get.mockImplementation((url) => {
+                if (url.includes('/users')) {
+                    return Promise.resolve({ data: mockUsers });
+                }
+                return Promise.resolve({ data: mockProducts });
+            });
 
-        const addProductButton = await screen.findByRole('button', { name: /add product/i });
+            render(<Home />, { mockAuth: { isAuthenticated: true, user: mockAdmin } });
 
-        // Form should be hidden initially
-        expect(screen.queryByText('Add Product Form')).not.toBeInTheDocument();
+            await waitFor(() => {
+                const dropdown = screen.getByRole('combobox');
+                expect(dropdown).toBeInTheDocument();
+                expect(screen.getByRole('option', { name: 'All Products' })).toBeInTheDocument();
+                expect(screen.getByRole('option', { name: mockUser.email })).toBeInTheDocument();
+            });
+        });
 
-        // Click to show
-        await userEvent.click(addProductButton);
-        expect(await screen.findByText('Add Product Form')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /hide add product/i })).toBeInTheDocument();
+        it('should not show the user filter dropdown for non-admin users', async () => {
+            render(<Home />, { mockAuth: { isAuthenticated: true, user: mockUser } });
 
-        // Click to hide
-        await userEvent.click(addProductButton);
-        expect(screen.queryByText('Add Product Form')).not.toBeInTheDocument();
+            await waitFor(() => {
+                 expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+            });
+        });
     });
-
-    it('should add a new product to the list when onProductAdded is called', async () => {
-        mockedAxios.get.mockResolvedValue({ data: mockProducts });
-        render(<Home />, { mockAuth: { isAuthenticated: true, user: mockUser } });
-
-        // Wait for initial products to load
-        expect(await screen.findByText('Test Product 1')).toBeInTheDocument();
-
-        // Open the form
-        const addProductButton = screen.getByRole('button', { name: /add product/i });
-        await userEvent.click(addProductButton);
-
-        // "Submit" the form in our mock component
-        const mockSubmit = await screen.findByRole('button', { name: 'Add Mock Product' });
-        await userEvent.click(mockSubmit);
-
-        // Check that the new product appears in the list
-        expect(await screen.findByText('New Mock Product')).toBeInTheDocument();
-      });
 });

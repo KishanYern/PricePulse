@@ -26,8 +26,13 @@ const renderWithProviders = (
     {
         // Allow overriding the mock auth state for specific tests
         mockAuth = {},
+        // Add a new option for router initial entries
+        initialEntries = ['/'],
         ...renderOptions
-    }: { mockAuth?: Partial<AuthState> } & Omit<RenderOptions, "wrapper"> = {}
+    }: {
+        mockAuth?: Partial<AuthState>;
+        initialEntries?: string[];
+    } & Omit<RenderOptions, "wrapper"> = {}
 ) => {
     // Combine the default mock auth state with any overrides
     const authValue = { ...defaultMockAuth, ...mockAuth };
@@ -41,7 +46,7 @@ const renderWithProviders = (
     // Define the wrapper component with all necessary providers
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
         <AuthContext.Provider value={authValue}>
-            <MemoryRouter>{children}</MemoryRouter>
+            <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
         </AuthContext.Provider>
     );
 

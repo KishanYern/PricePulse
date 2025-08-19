@@ -65,6 +65,9 @@ const ProductPage: React.FC = () => {
     }, [productId]);
 
     const chartData: ChartDataPoint[] = useMemo(() => {
+        if (!priceHistory) {
+            return [];
+        }
         return priceHistory.map(item => ({
             timestamp: item.timestamp,
             price: item.price,
