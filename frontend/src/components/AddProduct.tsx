@@ -92,6 +92,7 @@ export const AddProduct = ({ onProductAdded }: AddProductProps) => {
                     onChange={(e) => setSource(e.target.value)}
                 >
                     <option value='Amazon'>Amazon</option>
+                    <option value='eBay'>eBay</option>
                 </select>
                 <p className='text-sm text-gray-500 mb-4'>
                     Select the source of the product.

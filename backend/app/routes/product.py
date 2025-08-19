@@ -37,7 +37,7 @@ def _create_product_internal(product_data: ProductCreate, db: Session) -> Produc
         return (ProductStatus.PRODUCT_EXISTS, existing_product)
 
     # Call the web scraping function to get the product details
-    scraped_data = scrape_product_data(str(product_data.url))
+    scraped_data = scrape_product_data(str(product_data.url), str(product_data.source))
     if not scraped_data:
         return ProductStatus.PRODUCT_SCRAPER_FAILED
 
@@ -258,7 +258,7 @@ def update_product(product_id: int, product: ProductCreate, db: Session = Depend
     existing_product.url = str(product.url)
 
     # Call the web scraping function to update the product details
-    scraped_data = scrape_product_data(str(product.url))
+    scraped_data = scrape_product_data(str(product.url), str(product.source))
     if not scraped_data:
         raise HTTPException(status_code=400, detail="Failed to retrieve updated product details")
     

@@ -3,8 +3,7 @@ from bs4 import BeautifulSoup
 import requests
 import random
 from typing import Optional, Dict, Any
-from urllib.parse import urlparse
-
+import re
 from app.config import IPROYAL_PROXY_USERNAME, IPROYAL_PROXY_PASSWORD
 
 logging.basicConfig(level=logging.INFO)
@@ -49,11 +48,63 @@ def _parse_amazon(soup: BeautifulSoup) -> Optional[Dict[str, Any]]:
         logger.warning("Could not find all required Amazon elements. Page layout may have changed or it's a CAPTCHA.")
         return None
 
+def _parse_ebay(soup: BeautifulSoup) -> Optional[Dict[str, Any]]:
+    """
+    Parses HTML soup from an eBay product page using robust selectors and fallbacks.
+    """
+    # 1. Define the best selectors for each piece of data
+    title_selectors = ['.x-item-title__mainTitle']
+    price_selectors = ['[data-testid="x-price-primary"]', '.x-price-primary']
+    image_selectors = ['.ux-image-carousel-item.active img']
+
+    # Helper function to find text using a list of selectors
+    def find_element_text(selectors):
+        for selector in selectors:
+            element = soup.select_one(selector)
+            if element:
+                return element.get_text(strip=True)
+        return None
+
+    # 2. Update the image helper to get the high-resolution URL
+    def find_image_url(selectors):
+        for selector in selectors:
+            element = soup.select_one(selector)
+            if element:
+                # Prioritize the high-quality zoom image, then fall back to src
+                return element.get('data-zoom-src') or element.get('src')
+        return None
+
+    try:
+        title = find_element_text(title_selectors)
+        price_text = find_element_text(price_selectors)
+        image_url = find_image_url(image_selectors)
+
+        # Proceed only if the essential data (title and price) is found
+        if title and price_text:
+            # 3. Robustly parse the price string to extract the number
+            price_match = re.search(r'[\d,]+\.\d{2}', price_text)
+            current_price = float(price_match.group().replace(',', '')) if price_match else None
+
+            if current_price is not None:
+                return {
+                    "name": title,
+                    "current_price": current_price,
+                    "image_url": image_url,
+                }
+    except Exception as e:
+        logger.error(f"An unexpected error occurred during eBay parsing: {e}")
+        return None
+    
+    # If any of the required data was not found, return None
+    logger.warning("Could not find all required eBay elements. Page layout may have changed.")
+    return None
+
 PARSERS = {
-    "www.amazon.com": _parse_amazon
+    "Amazon": _parse_amazon,
+    "eBay": _parse_ebay
 }
 
-def scrape_product_data(product_url: str) -> Optional[Dict[str, Any]]:
+def scrape_product_data(product_url: str, source: str) -> Optional[Dict[str, Any]]:
     """
     Optimized scraping function using requests for better performance.
     Using Rotating Proxies for IP rotation.
@@ -69,7 +120,7 @@ def scrape_product_data(product_url: str) -> Optional[Dict[str, Any]]:
     }
 
     # Find the appropriate parser for the product URL
-    parser = PARSERS.get(urlparse(product_url).netloc)
+    parser = PARSERS.get(source)
     if not parser:
         logger.warning(f"No parser found for {product_url}")
         return None
@@ -98,8 +149,8 @@ def scrape_product_data(product_url: str) -> Optional[Dict[str, Any]]:
 
 if __name__ == '__main__':
     # Example usage
-    url = 'https://www.amazon.com/Acqua-Giorgio-Armani-Toilette-Ounces/dp/B000E7YK5K/?_encoding=UTF8&pd_rd_w=TdJT0&content-id=amzn1.sym.9071a05a-ab8a-4eb5-82ca-461a3b81eab8%3Aamzn1.symc.a68f4ca3-28dc-4388-a2cf-24672c480d8f&pf_rd_p=9071a05a-ab8a-4eb5-82ca-461a3b81eab8&pf_rd_r=HNJXDPDA7WT0GEHZCXPZ&pd_rd_wg=Q96GF&pd_rd_r=8b5f1bc1-dd27-4186-8225-b5bc649f372a&ref_=pd_hp_d_atf_ci_mcx_mr_ca_hp_atf_d&th=1'
-    data = scrape_product_data(url)
+    url = 'https://www.ebay.com/itm/116650489031?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20240603120050%26meid%3D4d83aed08f8948748822f9e9a97d83ee%26pid%3D102175%26rk%3D1%26rkt%3D1%26itm%3D116650489031%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DNoSignalMostSearched%26brand%3DNike&_trksid=p4375194.c102175.m166538&_trkparms=parentrq%3Ac07cab051980a671559126cdfff83a9a%7Cpageci%3A19646207-7cb1-11f0-a4ff-d209e4114610%7Ciid%3A1%7Cvlpname%3Avlp_homepage'
+    data = scrape_product_data(url, "eBay")
     if data:
         print(f"Scraped data: {data}")
     else:
