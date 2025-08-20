@@ -12,7 +12,7 @@ class Product(Base):
     current_price: Mapped[float] = mapped_column(Float, nullable=False)
     lowest_price: Mapped[float | None] = mapped_column(Float, nullable=True)
     highest_price: Mapped[float | None] = mapped_column(Float, nullable=True)
-    source: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    source: Mapped[str] = mapped_column(String(50), nullable=False)
     image_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

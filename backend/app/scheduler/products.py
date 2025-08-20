@@ -25,10 +25,11 @@ def update_product_prices_job():
         products_iterator = db.query(Product).yield_per(batch_size)
         for product in products_iterator:
             logger.info(f"Processing product: {product.name} (ID: {product.id}) at URL: {product.url}")
-            scraped_data = scrape_product_data(product.url)
+            scraped_data = scrape_product_data(product.url, product.source)
 
             if scraped_data:
                 # Update the product details
+                print(product)
                 product.name = scraped_data['name']
                 product.current_price = scraped_data['current_price']
 

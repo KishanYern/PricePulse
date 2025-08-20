@@ -1,3 +1,4 @@
+from time import sleep
 import logging
 from bs4 import BeautifulSoup
 import requests
@@ -104,48 +105,71 @@ PARSERS = {
     "eBay": _parse_ebay
 }
 
-def scrape_product_data(product_url: str, source: str) -> Optional[Dict[str, Any]]:
+headers = {
+        # Pick a random User-Agent for each request
+        'User-Agent': random.choice(user_agents),
+        
+    }
+
+def scrape_product_data(product_url: str, source: str, retries: int = 3, delay: float = 2.0) -> Optional[Dict[str, Any]]:
     """
     Optimized scraping function using requests for better performance.
     Using Rotating Proxies for IP rotation.
     """
 
-    headers = {
-        # Pick a random User-Agent for each request
-        'User-Agent': random.choice(user_agents),
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Connection': 'keep-alive',
-    }
-
-    # Find the appropriate parser for the product URL
     parser = PARSERS.get(source)
     if not parser:
-        logger.warning(f"No parser found for {product_url}")
-        return None
-
-    try:
-        response = requests.get(product_url, timeout=15, proxies=proxy_dict, headers=headers)
-        response.raise_for_status()
-
-        # Create a BeautifulSoup object to parse the HTML
-        soup = BeautifulSoup(response.text, 'lxml')
-        scraped_data = parser(soup)
-
-        if scraped_data:
-            scraped_data['url'] = product_url
-            logger.info(f"Successfully scraped data from {product_url}")
-            return scraped_data
-        else:
-            return None
-    except requests.RequestException as e:
-        logger.error(f"Request error while scraping {product_url}: {e}")
-        return None
-    except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
+        logger.error(f"No parser found for source: {source}")
         return None
     
+    with requests.Session() as session:
+        session.proxies = proxy_dict
+        session.headers.update({
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Connection': 'keep-alive'
+        })
+
+        for attempt in range(retries):
+            try:
+                session.headers['User-Agent'] = random.choice(user_agents)
+
+                logger.info(f"Scraping {source} product at URL: {product_url} (Attempt {attempt + 1})")
+                response = session.get(product_url, timeout=20)
+                response.raise_for_status()  # Raise an error for bad responses
+
+                soup = BeautifulSoup(response.text, 'lxml')
+
+                # Detect CAPTCHA
+                if "captcha" in soup.text.lower():
+                    logger.warning("CAPTCHA detected. Retrying...")
+                    # Wait longer if a CAPTCHA is detected
+                    sleep(delay * 2 + random.uniform(0, 2))
+                    continue
+
+                scraped_data = parser(soup)
+
+                if scraped_data and scraped_data.get("current_price") and scraped_data.get("name"):
+                    logger.info(f"Successfully scraped data from {source}: {scraped_data}")
+                    return scraped_data
+                else:
+                    logger.warning(f"Parser failed to extract required data on attempt {attempt + 1}.")
+                    logger.debug(f"Scraped data (if any): {scraped_data}")
+                
+            except requests.HTTPError as http_err:
+                logger.error(f"HTTP error occurred while scraping {source}: {http_err}")
+
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Request error on attempt {attempt + 1} for {product_url}: {e}")
+                
+            # If this is not the last attempt, use exponential backoff with jitter
+            if attempt < retries - 1:
+                sleep_time = delay * (2 ** attempt) + random.uniform(0, 2)
+                logger.info(f"Retrying in {sleep_time:.2f} seconds...")
+                sleep(sleep_time)
+    logger.error(f"Failed to scrape {source} product after {retries} attempts.")
+    return None
 
 if __name__ == '__main__':
     # Example usage
