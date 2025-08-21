@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any
 import re
 from app.config import IPROYAL_PROXY_USERNAME, IPROYAL_PROXY_PASSWORD
 
-from models.products import EbayFailStatus
+from app.models.products import EbayFailStatus
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
