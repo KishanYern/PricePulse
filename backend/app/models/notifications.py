@@ -20,8 +20,17 @@ class Notification(Base):
     )
 
     # Relationships
-    user = relationship("User", back_populates="notifications")
-    from_user = relationship("User", foreign_keys=[from_user_id])
+    # Defines the 'recipient' property that links back to the User model.
+    recipient: Mapped["User"] = relationship(
+        foreign_keys=[user_id], 
+        back_populates="received_notifications"
+    )
+    
+    # Defines the 'sender' property that links back to the User model.
+    sender: Mapped["User"] = relationship(
+        foreign_keys=[from_user_id], 
+        back_populates="sent_notifications"
+    )
 
     def __repr__(self):
         return f"<Notification(id={self.id}, user_id={self.user_id}, message={self.message}, created_at={self.created_at})>"
