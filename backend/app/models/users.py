@@ -37,6 +37,24 @@ class User(Base):
         passive_deletes=True
     )
 
+# Notifications this user has RECEIVED
+    received_notifications = relationship(
+        "Notification",
+        foreign_keys="[Notification.user_id]",
+        back_populates="recipient",
+        cascade="all, delete, delete-orphan",
+        passive_deletes=True
+    )
+
+    # Notifications this user has SENT
+    sent_notifications = relationship(
+        "Notification",
+        foreign_keys="[Notification.from_user_id]",
+        back_populates="sender",
+        cascade="all, delete, delete-orphan",
+        passive_deletes=True
+    )
+
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email})>"
     

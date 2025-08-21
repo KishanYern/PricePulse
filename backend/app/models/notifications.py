@@ -9,6 +9,7 @@ class Notification(Base):
     __tablename__ = 'notifications'
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    from_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     message: Mapped[str] = mapped_column(String(255), nullable=False)
     is_read: Mapped[bool] = mapped_column(default=False, nullable=False)
@@ -20,6 +21,7 @@ class Notification(Base):
 
     # Relationships
     user = relationship("User", back_populates="notifications")
+    from_user = relationship("User", foreign_keys=[from_user_id])
 
     def __repr__(self):
         return f"<Notification(id={self.id}, user_id={self.user_id}, message={self.message}, created_at={self.created_at})>"
