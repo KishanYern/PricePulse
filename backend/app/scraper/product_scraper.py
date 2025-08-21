@@ -1,7 +1,7 @@
-from time import sleep
 import logging
 from bs4 import BeautifulSoup
-import requests
+import httpx
+import asyncio
 import random
 from typing import Optional, Dict, Any
 import re
@@ -12,18 +12,43 @@ from app.models.products import EbayFailStatus
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-proxy = 'geo.iproyal.com:12321'
-proxy_auth = f'{IPROYAL_PROXY_USERNAME}:{IPROYAL_PROXY_PASSWORD}'
-proxy_dict = {
-    "http": f"http://{proxy_auth}@{proxy}",
-    "https": f"https://{proxy_auth}@{proxy}",
-}
+# --- Proxy and Header Configuration ---
+mounts = None
+if IPROYAL_PROXY_USERNAME and IPROYAL_PROXY_USERNAME != "your_proxy_username":
+    proxy_url = f"http://{IPROYAL_PROXY_USERNAME}:{IPROYAL_PROXY_PASSWORD}@geo.iproyal.com:12321"
+    # Using 'mounts' is a robust way to configure transports for specific domains.
+    # Here, we're routing all HTTP and HTTPS traffic through our proxy.
+    mounts = {
+        "http://": httpx.AsyncHTTPTransport(proxy=proxy_url),
+        "https://": httpx.AsyncHTTPTransport(proxy=proxy_url),
+    }
 
-# A list of real-world User-Agent strings
-user_agents = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Firefox/126.0',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/125.0.0.0'
+HEADERS_LIST = [
+    {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'DNT': '1' # Do Not Track Request Header
+    },
+    {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Firefox/126.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+    },
+    {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/125.0.0.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+    }
 ]
 
 def _parse_amazon(soup: BeautifulSoup) -> Optional[Dict[str, Any]]:
@@ -115,15 +140,9 @@ PARSERS = {
     "eBay": _parse_ebay
 }
 
-headers = {
-        # Pick a random User-Agent for each request
-        'User-Agent': random.choice(user_agents),
-        
-    }
-
-def scrape_product_data(product_url: str, source: str, retries: int = 3, delay: float = 2.0) -> Optional[Dict[str, Any]]:
+async def scrape_product_data(product_url: str, source: str, retries: int = 3, delay: float = 2.0) -> Optional[Dict[str, Any]]:
     """
-    Optimized scraping function using requests for better performance.
+    Optimized scraping function using httpx for better performance.
     Using Rotating Proxies for IP rotation.
     """
 
@@ -132,60 +151,50 @@ def scrape_product_data(product_url: str, source: str, retries: int = 3, delay: 
         logger.error(f"No parser found for source: {source}")
         return None
     
-    with requests.Session() as session:
-        session.proxies = proxy_dict
-        session.headers.update({
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Connection': 'keep-alive'
-        })
+    timeout = httpx.Timeout(20.0, read=25.0, connect=10.0)
 
+    async with httpx.AsyncClient(mounts=mounts, timeout=timeout) as client:
         for attempt in range(retries):
             try:
-                session.headers['User-Agent'] = random.choice(user_agents)
-
-                logger.info(f"Scraping {source} product at URL: {product_url} (Attempt {attempt + 1})")
-                response = session.get(product_url, timeout=20)
-                response.raise_for_status()  # Raise an error for bad responses
+                headers = random.choice(HEADERS_LIST)
+                response = await client.get(product_url, headers=headers)
+                response.raise_for_status()
 
                 soup = BeautifulSoup(response.text, 'lxml')
-
-                # Detect CAPTCHA
+                
                 if "captcha" in soup.text.lower():
-                    logger.warning("CAPTCHA detected. Retrying...")
-                    # Wait longer if a CAPTCHA is detected
-                    sleep(delay * 2 + random.uniform(0, 2))
+                    logger.warning(f"CAPTCHA on attempt {attempt + 1} for {product_url}")
+                    await asyncio.sleep(delay * 2 + random.uniform(0, 2))
                     continue
 
                 scraped_data = parser(soup)
-
-                if scraped_data and scraped_data.get("current_price") and scraped_data.get("name"):
-                    logger.info(f"Successfully scraped data from {source}: {scraped_data}")
+                if scraped_data and scraped_data.get("name") and scraped_data.get("current_price") is not None:
+                    scraped_data['url'] = product_url
                     return scraped_data
                 else:
-                    logger.warning(f"Parser failed to extract required data on attempt {attempt + 1}.")
-                    logger.debug(f"Scraped data (if any): {scraped_data}")
-                
-            except requests.HTTPError as http_err:
-                logger.error(f"HTTP error occurred while scraping {source}: {http_err}")
+                    logger.warning(f"Parser failed on attempt {attempt + 1} for {product_url}.")
 
-            except requests.exceptions.RequestException as e:
+            except httpx.RequestError as e:
                 logger.error(f"Request error on attempt {attempt + 1} for {product_url}: {e}")
-                
-            # If this is not the last attempt, use exponential backoff with jitter
+            
             if attempt < retries - 1:
-                sleep_time = delay * (2 ** attempt) + random.uniform(0, 2)
-                logger.info(f"Retrying in {sleep_time:.2f} seconds...")
-                sleep(sleep_time)
-    logger.error(f"Failed to scrape {source} product after {retries} attempts.")
+                wait_time = delay * (2 ** attempt) + random.uniform(0, 1)
+                await asyncio.sleep(wait_time)
+                
+    logger.error(f"Failed to scrape {product_url} after {retries} attempts.")
     return None
 
-if __name__ == '__main__':
-    # Example usage
+async def main():
+    """Main function to run the scraper for demonstration."""
+    # Example usage:
+    # The client is no longer passed as an argument. The function handles it internally.
     url = 'https://www.ebay.com/itm/116650489031?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20240603120050%26meid%3D4d83aed08f8948748822f9e9a97d83ee%26pid%3D102175%26rk%3D1%26rkt%3D1%26itm%3D116650489031%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DNoSignalMostSearched%26brand%3DNike&_trksid=p4375194.c102175.m166538&_trkparms=parentrq%3Ac07cab051980a671559126cdfff83a9a%7Cpageci%3A19646207-7cb1-11f0-a4ff-d209e4114610%7Ciid%3A1%7Cvlpname%3Avlp_homepage'
-    data = scrape_product_data(url, "eBay")
+    data = await scrape_product_data(url, "eBay")
     if data:
         print(f"Scraped data: {data}")
     else:
         print("Failed to scrape product data.")
+
+if __name__ == '__main__':
+    # Run the main asynchronous function
+    asyncio.run(main())

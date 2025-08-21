@@ -1,75 +1,77 @@
 from sqlalchemy.orm import Session
-from app.database import get_db
+from app.database import get_session_local
 from app.models import Product, PriceHistory
 from app.scraper.product_scraper import scrape_product_data
 from datetime import datetime, timezone
 import logging # For debugging purposes
 from app.models.products import EbayFailStatus 
 from app.routes.notification_utils import notify_users_and_delete_product
+import asyncio
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def _is_failed(db: Session, product: Product, scraped_data: dict) -> bool:
+EBAY_FAIL_STATUSES = [EbayFailStatus.SOLD_OUT.value, EbayFailStatus.LISTING_ENDED.value]
+
+async def process_product(db: Session, product: Product):
     """
-    Check if the scraped data indicates a failed product.
+    Handles scraping and database preparation for a single product.
     """
-    if product.source == "eBay" and scraped_data['name'] in [EbayFailStatus.SOLD_OUT.value, EbayFailStatus.LISTING_ENDED.value]:
+    scraped_data = await scrape_product_data(product.url, product.source)
+
+    if not scraped_data:
+        logger.warning(f"Failed to scrape data for product: {product.name} (ID: {product.id})")
+        return
+
+    # Handle unavailable eBay products
+    if product.source == "eBay" and scraped_data['name'] in EBAY_FAIL_STATUSES:
         reason = "ended" if scraped_data['name'] == EbayFailStatus.LISTING_ENDED.value else "sold out"
         notify_users_and_delete_product(db, product, reason)
-        return True
-    return False
+        return
 
-def update_product_prices_job():
+    # --- Update Product Details in the Session ---
+    product.name = scraped_data['name']
+    product.current_price = scraped_data['current_price']
+    if product.lowest_price is None or scraped_data['current_price'] < product.lowest_price:
+        product.lowest_price = scraped_data['current_price']
+    if product.highest_price is None or scraped_data['current_price'] > product.highest_price:
+        product.highest_price = scraped_data['current_price']
+    product.last_checked = datetime.now(timezone.utc)
+
+    # Create a new PriceHistory record
+    price_history = PriceHistory(product_id=product.id, price=product.current_price)
+    db.add(price_history)
+    logger.info(f"Successfully updated price for {product.name} to ${scraped_data['current_price']}.")
+
+async def update_product_prices_job():
     """
-    Scheduled task to scrape and update the price for every tracked product.
-    We will also create a new Price history record for each of the updated products.
-    We will email the user with the updated price information if they have notifications enabled for that product and the price passes a lower/upper threshold.
+    Asynchronously scrapes all products and updates their prices in the database.
     """
-    logger.info("Starting scheduled job to update product prices...")
-
-    # Get a new database session
-    db = next(get_db())
-
+    logger.info("Starting async scheduled job to update product prices...")
+    
+    # We need a new session for this async job context
+    db = get_session_local()()
+    
     try:
-        # Process products in batches to avoid loading all into memory at once
-        batch_size = 100
-        products_iterator = db.query(Product).yield_per(batch_size)
-        for product in products_iterator:
-            logger.info(f"Processing product: {product.name} (ID: {product.id}) at URL: {product.url}")
-            scraped_data = scrape_product_data(product.url, product.source)
+        products_to_process = db.query(Product).all()
+        if not products_to_process:
+            logger.info("No products to update.")
+            return
 
-            if scraped_data:
-                # Check if the product is an eBay item that is no longer available
-                if _is_failed(db, product, scraped_data):
-                    continue
+        # Create a list of concurrent tasks 
+        tasks = [process_product(db, product) for product in products_to_process]
 
-                # Update the product details
-                product.name = scraped_data['name']
-                product.current_price = scraped_data['current_price']
+        # Run all scraping tasks concurrently
+        await asyncio.gather(*tasks)
 
-                if product.lowest_price is None or scraped_data['current_price'] < product.lowest_price:
-                    product.lowest_price = scraped_data['current_price']
-                if product.highest_price is None or scraped_data['current_price'] > product.highest_price:
-                    product.highest_price = scraped_data['current_price']
-                
-                product.last_updated = datetime.now(timezone.utc)
-
-                # Create a new PriceHistory record
-                price_history = PriceHistory(
-                    product_id=product.id,
-                    price=product.current_price,
-                )
-                db.add(price_history)
-                logger.info(f"Successfully updated price for {product.name} to ${scraped_data['current_price']}.")
-            else:
-                logger.warning(f"Failed to update price for {product.name} (ID: {product.id})")
-
+        # Commit all the changes made in the session at once
         db.commit()
+        logger.info("Database commit successful.")
+
     except Exception as e:
-        logger.error(f"Error occurred while updating product prices: {e}")
+        logger.error(f"An error occurred during the async job: {e}")
         db.rollback()
     finally:
         db.close()
 
-    logger.info("Scheduled job to update product prices completed.")
+    logger.info("Async scheduled job completed.")

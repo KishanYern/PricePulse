@@ -8,7 +8,7 @@ from app.config import ALLOWED_CORS_ORIGINS
 from datetime import datetime, timezone, timedelta
 
 # CRON Jobs
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.scheduler.products import update_product_prices_job
 
 from app.database import Base, get_db, get_engine, get_session_local
@@ -17,7 +17,7 @@ from app import models
 from app.routes import user, product, price_history, notification
 
 # Define the background scheduler
-scheduler = BackgroundScheduler()
+scheduler = AsyncIOScheduler()
 
 # Define the lifespan context manager
 @contextlib.asynccontextmanager
@@ -37,7 +37,9 @@ async def lifespan(app: FastAPI):
 
     # Start the background scheduler
     print("Starting background scheduler...")
-    scheduler.add_job(update_product_prices_job, "cron", hour='*/6', id="update_product_prices_job")
+    #scheduler.add_job(update_product_prices_job, "cron", hour='*/6', id="update_product_prices_job")
+    # Run the scheduled task now for testing
+    scheduler.add_job(update_product_prices_job, next_run_time=datetime.now(timezone.utc)+timedelta(seconds=5))
     scheduler.start()
     
     yield

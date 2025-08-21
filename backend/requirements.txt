@@ -3,7 +3,6 @@ uvicorn[standard]
 sqlalchemy
 psycopg2-binary
 pydantic
-selenium
 lxml
 python-dotenv
 apscheduler
@@ -13,3 +12,5 @@ python-jose[cryptography]
 fastapi-jwt-auth
 python-multipart
 bcrypt
+httpx
+asyncio
