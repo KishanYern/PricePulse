@@ -2,6 +2,11 @@ from app.database import Base
 from sqlalchemy import DateTime, String, Float, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
+from enum import Enum
+
+class EbayFailStatus(Enum):
+    SOLD_OUT = "ITEM SOLD OUT"
+    LISTING_ENDED = "LISTING ENDED"
 
 class Product(Base):
     __tablename__ = "products"

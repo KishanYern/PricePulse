@@ -3,10 +3,22 @@ from app.database import get_db
 from app.models import Product, PriceHistory
 from app.scraper.product_scraper import scrape_product_data
 from datetime import datetime, timezone
-import logging # For debugging purposes 
+import logging # For debugging purposes
+from app.models.products import EbayFailStatus 
+from app.routes.notification_utils import notify_users_and_delete_product
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def _is_failed(db: Session, product: Product, scraped_data: dict) -> bool:
+    """
+    Check if the scraped data indicates a failed product.
+    """
+    if product.source == "eBay" and scraped_data['name'] in [EbayFailStatus.SOLD_OUT.value, EbayFailStatus.LISTING_ENDED.value]:
+        reason = "ended" if scraped_data['name'] == EbayFailStatus.LISTING_ENDED.value else "sold out"
+        notify_users_and_delete_product(db, product, reason)
+        return True
+    return False
 
 def update_product_prices_job():
     """
@@ -28,8 +40,11 @@ def update_product_prices_job():
             scraped_data = scrape_product_data(product.url, product.source)
 
             if scraped_data:
+                # Check if the product is an eBay item that is no longer available
+                if _is_failed(db, product, scraped_data):
+                    continue
+
                 # Update the product details
-                print(product)
                 product.name = scraped_data['name']
                 product.current_price = scraped_data['current_price']
 
@@ -48,7 +63,7 @@ def update_product_prices_job():
                 db.add(price_history)
                 logger.info(f"Successfully updated price for {product.name} to ${scraped_data['current_price']}.")
             else:
-                logger.warning(f"Failed to scrape data for product: {product.name} (ID: {product.id})")
+                logger.warning(f"Failed to update price for {product.name} (ID: {product.id})")
 
         db.commit()
     except Exception as e:
