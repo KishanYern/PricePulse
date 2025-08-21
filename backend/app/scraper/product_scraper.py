@@ -7,6 +7,8 @@ from typing import Optional, Dict, Any
 import re
 from app.config import IPROYAL_PROXY_USERNAME, IPROYAL_PROXY_PASSWORD
 
+from app.models.products import EbayFailStatus
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -53,12 +55,22 @@ def _parse_ebay(soup: BeautifulSoup) -> Optional[Dict[str, Any]]:
     """
     Parses HTML soup from an eBay product page using robust selectors and fallbacks.
     """
-    # 1. Define the best selectors for each piece of data
-    title_selectors = ['.x-item-title__mainTitle']
-    price_selectors = ['[data-testid="x-price-primary"]', '.x-price-primary']
-    image_selectors = ['.ux-image-carousel-item.active img']
+    # Check if the product is sold out or the listing has ended
+    availability_element = soup.select_one('.d-quantity__availability-text')
+    if availability_element and ('sold' in availability_element.text.lower() or 'out of stock' in availability_element.text.lower()):
+        logger.warning("eBay product is sold out.")
+        return {"name": EbayFailStatus.SOLD_OUT.value, "current_price": 0.0, "image_url": None}
 
-    # Helper function to find text using a list of selectors
+    ended_listing_element = soup.select_one('#ended_msg')
+    if ended_listing_element and 'this listing has ended' in ended_listing_element.text.lower():
+        logger.warning("eBay listing has ended.")
+        return {"name": EbayFailStatus.LISTING_ENDED.value, "current_price": 0.0, "image_url": None}
+
+    # Define selectors for each piece of data
+    title_selectors = ['.x-item-title__mainTitle', 'h1.d-item-title']
+    price_selectors = ['[data-testid="x-price-primary"] .ux-textspans', '.x-price-primary .ux-textspans']
+    image_selectors = ['.ux-image-carousel-item.active img', '#vi-img-main-img']
+
     def find_element_text(selectors):
         for selector in selectors:
             element = soup.select_one(selector)
@@ -66,12 +78,10 @@ def _parse_ebay(soup: BeautifulSoup) -> Optional[Dict[str, Any]]:
                 return element.get_text(strip=True)
         return None
 
-    # 2. Update the image helper to get the high-resolution URL
     def find_image_url(selectors):
         for selector in selectors:
             element = soup.select_one(selector)
             if element:
-                # Prioritize the high-quality zoom image, then fall back to src
                 return element.get('data-zoom-src') or element.get('src')
         return None
 
@@ -80,25 +90,25 @@ def _parse_ebay(soup: BeautifulSoup) -> Optional[Dict[str, Any]]:
         price_text = find_element_text(price_selectors)
         image_url = find_image_url(image_selectors)
 
-        # Proceed only if the essential data (title and price) is found
-        if title and price_text:
-            # 3. Robustly parse the price string to extract the number
-            price_match = re.search(r'[\d,]+\.\d{2}', price_text)
-            current_price = float(price_match.group().replace(',', '')) if price_match else None
+        if not title or not price_text:
+            logger.warning("Could not find all required eBay elements (title/price).")
+            return None
 
-            if current_price is not None:
-                return {
-                    "name": title,
-                    "current_price": current_price,
-                    "image_url": image_url,
-                }
+        price_match = re.search(r'[\d,]+\.\d{2}', price_text)
+        current_price = float(price_match.group().replace(',', '')) if price_match else None
+        
+        if current_price is None:
+            logger.warning(f"Could not parse price from string: '{price_text}'")
+            return None
+
+        return {
+            "name": title,
+            "current_price": current_price,
+            "image_url": image_url,
+        }
     except Exception as e:
         logger.error(f"An unexpected error occurred during eBay parsing: {e}")
         return None
-    
-    # If any of the required data was not found, return None
-    logger.warning("Could not find all required eBay elements. Page layout may have changed.")
-    return None
 
 PARSERS = {
     "Amazon": _parse_amazon,

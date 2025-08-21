@@ -1,9 +1,16 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, {
+    createContext,
+    useState,
+    useEffect,
+    useContext,
+    useCallback,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 // types
 import type { User } from "./types/User";
+import type { Notification } from "./types/Notification";
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -14,9 +21,15 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<User>;
     logout: () => void;
     isLoading: boolean;
+    notifications: Notification[];
+    fetchNotifications: () => void;
+    markAsRead: (notificationId: number) => void;
+    markAsUnread: (notificationId: number) => void;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+    undefined
+);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
@@ -24,7 +37,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true); // To indicate auth check is in progress
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const navigate = useNavigate();
+
+    const fetchNotifications = useCallback(async () => {
+        if (!isAuthenticated) return;
+        try {
+            const response = await axios.get(
+                "http://localhost:8000/notifications/",
+                {
+                    withCredentials: true,
+                }
+            );
+            setNotifications(response.data);
+        } catch (error) {
+            console.error("Failed to fetch notifications:", error);
+        }
+    }, [isAuthenticated]);
 
     useEffect(() => {
         const checkAuthStatus = async () => {
@@ -51,7 +80,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         };
 
         checkAuthStatus();
-    }, []); // Run once on component mount
+    }, [navigate]);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchNotifications();
+        }
+    }, [isAuthenticated, fetchNotifications]);
 
     const login = async (email: string, password: string): Promise<User> => {
         try {
@@ -78,10 +113,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             // 3. Update the state with the correct user data
             setIsAuthenticated(true);
             setUser(userData);
-            
+
             // 4. Return the user data object
             return userData;
-
         } catch (error) {
             console.error("Login failed:", error);
             setIsAuthenticated(false);
@@ -108,9 +142,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
     };
 
+    const markAsRead = async (notificationId: number) => {
+        try {
+            await axios.patch(
+                `http://localhost:8000/notifications/${notificationId}/update_read`,
+                { new_is_read: true },
+                { withCredentials: true }
+            );
+            fetchNotifications();
+        } catch (error) {
+            console.error("Failed to mark notification as read:", error);
+        }
+    };
+
+    const markAsUnread = async (notificationId: number) => {
+        try {
+            await axios.patch(
+                `http://localhost:8000/notifications/${notificationId}/update_read`,
+                { new_is_read: false },
+                { withCredentials: true }
+            );
+            fetchNotifications();
+        } catch (error) {
+            console.error("Failed to mark notification as unread:", error);
+        }
+    };
+
     return (
         <AuthContext.Provider
-            value={{ isAuthenticated, user, isAdmin: user?.admin || false, login, logout, isLoading }}
+            value={{
+                isAuthenticated,
+                user,
+                isAdmin: user?.admin || false,
+                login,
+                logout,
+                isLoading,
+                notifications,
+                fetchNotifications,
+                markAsRead,
+                markAsUnread,
+            }}
         >
             {children}
         </AuthContext.Provider>

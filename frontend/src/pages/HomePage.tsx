@@ -51,7 +51,6 @@ const Home: React.FC = () => {
                     { withCredentials: true }
                 );
                 setProducts(Array.isArray(response.data) ? response.data : []);
-                console.log("Fetched products:", response.data);
             } catch (error) {
                 console.error("Error fetching data:", error);
                 setProducts([]);

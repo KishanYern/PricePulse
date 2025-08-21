@@ -14,7 +14,7 @@ from app.scheduler.products import update_product_prices_job
 from app.database import Base, get_db, get_engine, get_session_local
 
 from app import models
-from app.routes import user, product, price_history
+from app.routes import user, product, price_history, notification
 
 # Define the background scheduler
 scheduler = BackgroundScheduler()
@@ -66,6 +66,9 @@ app.include_router(product.router)
 
 # Price History routes
 app.include_router(price_history.router)
+
+# Notification routes
+app.include_router(notification.router)
 
 @app.get('/')
 def root():
