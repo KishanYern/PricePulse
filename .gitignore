@@ -10,3 +10,6 @@ backend/.env
 
 # VSCode settings
 .vscode
+
+# Prod env
+.env.production
