@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     useEffect(() => {
         const checkAuthStatus = async () => {
             try {
-                // Try to fetch current user data using the cookie
+                // Check for a valid authentication cookie
                 const response = await axios.get(
                     `${API_URL}/users/me`,
                     {
@@ -74,7 +74,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 console.error("Auth check failed:", error);
                 setIsAuthenticated(false);
                 setUser(null);
-                navigate("/login"); // Redirect to login if auth check fails
             } finally {
                 setIsLoading(false);
             }
