@@ -4,17 +4,9 @@ backend/.env
 # Pytest cache
 .pytest_cache
 
-# Backend pycache
-backend/app/__pycache__
-backend/app/models/__pycache__
-backend/tests/__pycache__
-backend/tests/database_tests/__pycache__
-backend/tests/route_tests/__pycache__
-backend/app/routes/__pycache__
-backend/app/schemas/__pycache__
-backend/.pytest_cache
-backend/app/scraper/__pycache__
-backend/app/scheduler/__pycache__
+# Python cache files
+**/__pycache__/
+*.pyc
 
 # VSCode settings
 .vscode

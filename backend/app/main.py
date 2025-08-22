@@ -81,13 +81,3 @@ def test_db(db: Session = Depends(get_db)):
     """
     result = db.execute(text('SELECT 1')).fetchone()
     return {"db connection": (result is not None and result[0] == 1)}
-
-if __name__ == "__main__":
-    # When using `uvicorn`, the `lifespan` function handles database creation.
-    if os.getenv("APP_ENV") != "test":
-        print("Running main.py directly: Ensuring database tables exist...")
-        engine = get_engine()
-        Base.metadata.create_all(bind=engine)
-        print("Tables created for direct run.")
-    else:
-        print("Running main.py directly in test environment. Table creation handled by pytest.")
