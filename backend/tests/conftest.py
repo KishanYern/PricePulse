@@ -89,3 +89,31 @@ def test_client(test_db):
     
     # Clean up: clear dependency overrides after the test
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function")
+def authenticated_client(test_client):
+    """
+    Provides an authenticated TestClient.
+    Creates a user and logs them in.
+    The client will have the JWT token set in the headers.
+    """
+    import uuid
+    email = f"testuser_{uuid.uuid4()}@example.com"
+    password = "testpassword"
+
+    # Create user
+    user_data = {"email": email, "password": password}
+    response = test_client.post("/users/create", json=user_data)
+    assert response.status_code == 201
+
+    token_data = response.json()
+    token = token_data["access_token"]
+
+    # Set auth header
+    test_client.headers["Authorization"] = f"Bearer {token}"
+
+    yield test_client
+
+    # Clean up - remove auth header
+    test_client.headers.pop("Authorization", None)

@@ -15,3 +15,4 @@ httpx
 alembic
 bs4
 pytest
+pytest-mock

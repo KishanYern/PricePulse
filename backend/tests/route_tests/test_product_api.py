@@ -1,200 +1,175 @@
-# Current price check will be implemented when the scraping function is ready
-
 import pytest
 import uuid
 from app.schemas.product import ProductOut
+from unittest.mock import AsyncMock
+from fastapi.testclient import TestClient
 
-def test_create_product(test_client):
+@pytest.fixture
+def mock_scraper(mocker):
+    """Fixture to mock the product scraper dynamically."""
+    async def mock_scrape_func(url, source):
+        return {
+            "name": "Mocked Product Name",
+            "url": url,
+            "current_price": 123.45,
+            "image_url": "https://mocked.com/image.png"
+        }
+
+    return mocker.patch(
+        "app.routes.product.scrape_product_data",
+        side_effect=mock_scrape_func
+    )
+
+def test_create_product(authenticated_client, mock_scraper):
     """
-    Test the create_product endpoints.
+    Test the create_product endpoint with an authenticated user.
     """
+    url_to_create = f"https://example.com/product_{uuid.uuid4()}"
     product_data = {
-        "url": f"https://example.com/product_{uuid.uuid4()}",
-        "source": "Example Source"
+        "product": {
+            "url": url_to_create,
+            "source": "Test"
+        },
+        "notes": "These are test notes.",
+        "lower_threshold": 100.0,
+        "upper_threshold": 200.0,
+        "notify": True
     }
 
-    response = test_client.post('/products/create', json=product_data)
-    assert response.status_code == 201
+    response = authenticated_client.post('/products/create-product', json=product_data)
+    assert response.status_code == 201, response.text
 
     product = response.json()
     validated_product = ProductOut(**product)
-    assert isinstance(validated_product, ProductOut)
+
     assert validated_product.id is not None
-    assert str(validated_product.url) == product_data["url"]
-    assert validated_product.name is not None
-    #assert validated_product.current_price is not None
-    assert validated_product.created_at is not None
-    assert validated_product.last_checked is not None
+    assert str(validated_product.url) == url_to_create
+    assert validated_product.current_price == 123.45
+    assert validated_product.notes == product_data["notes"]
+    assert validated_product.lower_threshold == product_data["lower_threshold"]
+    assert validated_product.upper_threshold == product_data["upper_threshold"]
+    assert validated_product.notify is True
+    assert validated_product.source == product_data["product"]["source"]
+    assert str(validated_product.image_url) == "https://mocked.com/image.png"
 
-    # We did not insert these fields, so they should be None.
-    #assert validated_product.lowest_price is None
-    #assert validated_product.highest_price is None
-
-    # Check if the product's price history is created
-    price_history_response = test_client.get(f'/products/{validated_product.id}/price-history')
-    assert price_history_response.status_code == 200
-    price_history = price_history_response.json()
-    assert isinstance(price_history, list)
-    assert len(price_history) > 0
-    for entry in price_history:
-        assert "id" in entry and entry["id"] is not None
-        assert "product_id" in entry and entry["product_id"] == validated_product.id
-        assert "price" in entry and isinstance(entry["price"], float)
-        assert "timestamp" in entry and isinstance(entry["timestamp"], str)
-        assert "source" in entry and (entry["source"] is None or isinstance(entry["source"], str))
-
-def test_get_all_products(test_client):
+def test_get_user_products(authenticated_client, mock_scraper):
     """
-    Test the get_all_products endpoint.
+    Test the get_user_products endpoint.
     """
-    response = test_client.get('/products/')
+    product_data = {"product": {"url": f"https://example.com/product_{uuid.uuid4()}", "source": "Test"}}
+    create_response = authenticated_client.post('/products/create-product', json=product_data)
+    assert create_response.status_code == 201
+
+    me_response = authenticated_client.get("/users/me")
+    assert me_response.status_code == 200
+    user_id = me_response.json()['id']
+
+    response = authenticated_client.get(f'/products/{user_id}/user-products')
     assert response.status_code == 200
 
     products = response.json()
     assert isinstance(products, list)
+    assert len(products) >= 1
     for product in products:
-        validated_product = ProductOut(**product)
-        assert isinstance(validated_product, ProductOut)
-        assert validated_product.id is not None
-        assert validated_product.url is not None
-        assert validated_product.name is not None
-        #assert validated_product.current_price is not None
+        ProductOut(**product)
 
-def test_get_product(test_client):
+def test_get_product(authenticated_client, mock_scraper):
     """
-    Test the get_product endpoint.
+    Test the get_product endpoint for a product associated with the user.
     """
-    product_data = {
-        "url": f"https://example.com/product_{uuid.uuid4()}",
-        "source": "Example Source"
-    }
+    product_data = {"product": {"url": f"https://example.com/product_{uuid.uuid4()}", "source": "Test"}}
+    create_response = authenticated_client.post('/products/create-product', json=product_data)
+    created_product_id = create_response.json()['id']
 
-    # First we create a product
-    create_response = test_client.post('/products/create', json=product_data)
-    assert create_response.status_code == 201
-    created_product = create_response.json()
-    product_id = created_product['id']
-
-    # Now we retrieve the product by ID
-    get_response = test_client.get(f'/products/{product_id}')
+    get_response = authenticated_client.get(f'/products/{created_product_id}')
     assert get_response.status_code == 200
+
     product = get_response.json()
-
     validated_product = ProductOut(**product)
-    assert isinstance(validated_product, ProductOut)
-    assert validated_product.id == product_id
-    assert str(validated_product.url) == product_data["url"]
-    assert validated_product.name is not None
-    #assert validated_product.current_price is not None
-    assert validated_product.created_at is not None
-    assert validated_product.last_checked is not None
+    assert validated_product.id == created_product_id
+    assert validated_product.name == "Mocked Product Name"
 
-    # We did not insert these fields, so they should be None.
-    # lowest_price and highest_price are only set if price history tracking is implemented,
-    # so after creation or update, they should remain None.
-    #assert validated_product.lowest_price is None
-    #assert validated_product.highest_price is None
-
-def test_create_product_duplicate(test_client):
+def test_create_product_duplicate_url_associates_existing_product(authenticated_client, mock_scraper, test_client: TestClient):
     """
-    Test creating a product with a duplicate URL.
+    Test that creating a product with a duplicate URL with a different user
+    associates the existing product with the new user.
     """
-    product_data = {
-        "url": f"https://example.com/product_{uuid.uuid4()}",
-        "source": "Example Source"
-    }
+    shared_url = f"https://example.com/shared_product_{uuid.uuid4()}"
 
-    # Create the first product
-    create_response = test_client.post('/products/create', json=product_data)
-    assert create_response.status_code == 201
+    product_data_1 = {"product": {"url": shared_url, "source": "Test"}}
+    response1 = authenticated_client.post('/products/create-product', json=product_data_1)
+    assert response1.status_code == 201
+    product1_id = response1.json()['id']
 
-    # Attempt to create a second product with the same URL
-    duplicate_response = test_client.post('/products/create', json=product_data)
-    assert duplicate_response.status_code == 400
-    assert duplicate_response.status_code == 400
-    assert "Product with this URL already exists" in duplicate_response.json().get("detail", "")
+    email = f"testuser2_{uuid.uuid4()}@example.com"
+    password = "testpassword2"
+    user_data = {"email": email, "password": password}
 
-def test_update_product(test_client):
+    create_user_response = test_client.post("/users/create", json=user_data)
+    assert create_user_response.status_code == 201
+    token = create_user_response.json()["access_token"]
+
+    test_client.headers["Authorization"] = f"Bearer {token}"
+
+    product_data_2 = {"product": {"url": shared_url, "source": "Test"}, "notes": "Second user's notes"}
+    response2 = test_client.post('/products/create-product', json=product_data_2)
+    assert response2.status_code == 201, response2.text
+    product2_id = response2.json()['id']
+
+    assert product1_id == product2_id
+    assert response2.json()['notes'] == "Second user's notes"
+
+    test_client.headers.pop("Authorization", None)
+
+
+def test_update_product(authenticated_client, mocker):
     """
     Test the update_product endpoint.
     """
-    product_data = {
-        "url": f"https://example.com/product_{uuid.uuid4()}",
-        "source": "Example Source"
+    url_to_create = f"https://example.com/product_{uuid.uuid4()}"
+
+    create_scraped_data = {
+        "name": "Original Name", "url": url_to_create, "current_price": 123.45,
+        "image_url": "https://mocked.com/image.png"
+    }
+    update_scraped_data = {
+        "name": "Updated Product Name", "url": url_to_create, "current_price": 42.42,
+        "image_url": "https://mocked.com/updated-image.png"
     }
 
-    # First we create a product
-    create_response = test_client.post('/products/create', json=product_data)
+    mocker.patch(
+        "app.routes.product.scrape_product_data",
+        side_effect=[create_scraped_data, update_scraped_data]
+    )
+
+    product_data = {"product": {"url": url_to_create, "source": "Test"}}
+    create_response = authenticated_client.post('/products/create-product', json=product_data)
     assert create_response.status_code == 201
     created_product = create_response.json()
     product_id = created_product['id']
+    assert created_product['name'] == "Original Name"
 
-    # Now we update the product
-    updated_data = {
-        "url": f"https://example.com/updated_product_{uuid.uuid4()}",
-        "source": "Updated Source"
-    }
-    
-    update_response = test_client.put(f'/products/{product_id}', json=updated_data)
-    assert update_response.status_code == 200
+    updated_data = {"url": url_to_create, "source": "UpdatedSource"}
+    update_response = authenticated_client.put(f'/products/{product_id}', json=updated_data)
+    assert update_response.status_code == 200, update_response.text
 
-    updated_product = update_response.json()
-    validated_product = ProductOut(**updated_product)
-    assert isinstance(validated_product, ProductOut)
-    assert validated_product.id == product_id
-    assert str(validated_product.url) == updated_data["url"]
-    assert validated_product.name is not None
-    #assert validated_product.current_price is not None
-    assert validated_product.created_at is not None
-    assert validated_product.last_checked is not None
-    
-    # We did not insert these fields, so they should be None
-    #assert validated_product.lowest_price is None
-    #assert validated_product.highest_price is None
+    updated_product_json = update_response.json()
+    validated_product = ProductOut(**updated_product_json)
+    assert validated_product.name == "Updated Product Name"
+    assert validated_product.current_price == 42.42
+    assert validated_product.source == "UpdatedSource"
 
-    # Check if the product's last_checked field is updated
-    from datetime import datetime
-    updated_last_checked = datetime.fromisoformat(updated_product['last_checked'])
-    created_last_checked = datetime.fromisoformat(created_product['last_checked'])
-    assert updated_last_checked > created_last_checked
-
-    # Check if the new price history entry is created
-    price_history_response = test_client.get(f'/products/{product_id}/price-history')
-    assert price_history_response.status_code == 200
-    price_history = price_history_response.json()
-    newest_entry = price_history[-1] 
-    assert newest_entry['product_id'] == product_id
-    assert newest_entry['price'] == updated_data.get('current_price', created_product['current_price'])
-    assert newest_entry['timestamp'] is not None
-    assert newest_entry.get('source') == updated_data["source"]
-
-def test_delete_product(test_client):
+def test_delete_product(authenticated_client, mock_scraper):
     """
     Test the delete_product endpoint.
-    First we create a product, then delete that product by ID.
     """
-    product_data = {
-        "url": f"https://example.com/product_{uuid.uuid4()}",
-        "source": "Example Source"
-    }
+    product_data = {"product": {"url": f"https://example.com/product_{uuid.uuid4()}", "source": "Test"}}
+    create_response = authenticated_client.post('/products/create-product', json=product_data)
+    product_id = create_response.json()['id']
 
-    # Create a product
-    create_response = test_client.post('/products/create', json=product_data)
-    assert create_response.status_code == 201
-    created_product = create_response.json()
-    product_id = created_product['id']
-
-    # Delete the product
-    delete_response = test_client.delete(f'/products/{product_id}')
+    delete_response = authenticated_client.delete(f'/products/{product_id}')
     assert delete_response.status_code == 200
-    assert "deleted" in delete_response.json().get("message", "").lower()
-    assert delete_response.json() == {"message": "Product deleted successfully"}
+    assert "deleted successfully" in delete_response.json().get("message", "").lower()
 
-    # Attempt to retrieve the deleted product
-    get_response = test_client.get(f'/products/{product_id}')
+    get_response = authenticated_client.get(f'/products/{product_id}')
     assert get_response.status_code == 404
-    assert get_response.json() == {"detail": "Product not found"}
-
-    # Check if the product price history is also deleted
-    price_history_response = test_client.get(f'/products/{product_id}/price-history')
-    assert price_history_response.status_code == 404

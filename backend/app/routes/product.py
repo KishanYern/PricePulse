@@ -232,6 +232,7 @@ async def create_product(user_product_data: UserCreateProduct, db: Session = Dep
             upperThreshold=user_product_entry.upper_threshold,
             notify=user_product_entry.notify,
             source=product.source,
+            imageUrl=product.image_url,
             createdAt=product.created_at,
             lastChecked=product.last_checked,
         )
@@ -265,6 +266,7 @@ async def update_product(product_id: int, product: ProductCreate, db: Session = 
     
     # Update the product attributes
     existing_product.name = scraped_data["name"]
+    existing_product.source = str(product.source)
     existing_product.current_price = scraped_data["current_price"]
     if existing_product.lowest_price is None or scraped_data["current_price"] < existing_product.lowest_price:
         existing_product.lowest_price = scraped_data["current_price"]

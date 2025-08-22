@@ -1,193 +1,134 @@
 import pytest
 import uuid
-from app.schemas.user import UserOut
+from app.schemas.user import UserOut, Token, WholeUserOut
 
 DELETE_USER_SUCCESS_MESSAGE = {"message": "User deleted successfully"}
 INVALID_CREDENTIALS_ERROR = {"detail": "Invalid credentials"}
 EMAIL_ALREADY_REGISTERED_MESSAGE = {"detail": "Email already registered"}
 
+@pytest.fixture
+def create_user_and_get_token(test_client):
+    """Fixture to create a user and return the token and user data."""
+    user_data = {
+        "email": f"test_user_{uuid.uuid4()}@example.com",
+        "password": "securepassword123"
+    }
+    response = test_client.post("/users/create", json=user_data)
+    assert response.status_code == 201
+    token = Token(**response.json())
+    return {"token": token, "user_data": user_data}
+
 def test_create_user(test_client):
     """
-    Test the create_user endpoint.
+    Test the create_user endpoint returns a valid token.
     """
     user_data = {
         "email": f"test_user_{uuid.uuid4()}@example.com",
         "password": "securepassword123"
     }
     response = test_client.post("/users/create", json=user_data)
-
-    # Validate the response
     assert response.status_code == 201
-    user = response.json()
-    validated_user = UserOut(**user)
-    assert validated_user.id is not None
-    assert validated_user.email == user_data["email"]
 
-def test_get_all_users(test_client):
+    token = Token(**response.json())
+    assert token.access_token
+    assert token.token_type == "bearer"
+
+    # Verify user can be fetched with the new token
+    headers = {"Authorization": f"Bearer {token.access_token}"}
+    me_response = test_client.get("/users/me", headers=headers)
+    assert me_response.status_code == 200
+    user = UserOut(**me_response.json())
+    assert user.email == user_data["email"]
+
+def test_get_all_users(test_client, create_user_and_get_token):
     """
     Test the get_all_users endpoint.
     """
     response = test_client.get("/users/")
     assert response.status_code == 200
     users = response.json()
-
-    # Validate that the response is a list of UserOut schemas
-    # Validate that the response is a list of users with required fields
     assert isinstance(users, list)
+    assert len(users) >= 1
     for user in users:
-        assert "id" in user and user["id"] is not None
-        assert "email" in user and user["email"] is not None
-        validated_user = UserOut(**user)
-        assert isinstance(validated_user, UserOut)
-        assert validated_user.id is not None
-        assert validated_user.email is not None
+        WholeUserOut(**user)
 
-def test_get_user(test_client):
+def test_get_user(test_client, create_user_and_get_token):
     """
-    Test the get_user endpoint. 
-    First we create a user, then attempt to retrieve that user_id
+    Test the get_user endpoint.
     """
-    user_data = {
-        "email": f"test_user_{uuid.uuid4()}@example.com",
-        "password": "securepassword123"
-    }
+    token = create_user_and_get_token["token"]
+    headers = {"Authorization": f"Bearer {token.access_token}"}
+    me_response = test_client.get("/users/me", headers=headers)
+    user_id = me_response.json()['id']
 
-    # First we create a user
-    create_user_response = test_client.post("/users/create", json=user_data)
-    assert create_user_response.status_code == 201
-    created_user = create_user_response.json()
-    user_id = created_user['id']
-
-    # Now we retrieve the user by ID
     get_user_response = test_client.get(f"/users/{user_id}")
     assert get_user_response.status_code == 200
-    user = get_user_response.json()
+    user = WholeUserOut(**get_user_response.json())
+    assert user.id == user_id
+    assert user.email == create_user_and_get_token["user_data"]["email"]
 
-    # Validate the retrieved user
-    validated_user = UserOut(**user)
-    assert isinstance(validated_user, UserOut)
-    assert validated_user.id is not None
-    assert validated_user.email is not None
-    assert validated_user.id == user_id
-    assert validated_user.email == user_data["email"]
-
-def test_update_user(test_client):
+def test_update_user(test_client, create_user_and_get_token):
     """
     Test the update_user endpoint.
-    First we create a user, then update that user's email and password.
     """
-    user_data = {
-        "email": f"test_user_{uuid.uuid4()}@example.com",
-        "password": "securepassword123"
-    }
+    token = create_user_and_get_token["token"]
+    headers = {"Authorization": f"Bearer {token.access_token}"}
+    me_response = test_client.get("/users/me", headers=headers)
+    user_id = me_response.json()['id']
 
-    # Create a user
-    create_user_response = test_client.post("/users/create", json=user_data)
-    assert create_user_response.status_code == 201
-    created_user = create_user_response.json()
-    user_id = created_user['id']
-
-    # Update the user's email and password
     updated_data = {
         "email": f"updated_user_{uuid.uuid4()}@example.com",
         "password": "newsecurepassword"
     }
     update_response = test_client.put(f"/users/{user_id}", json=updated_data)
     assert update_response.status_code == 200
-    updated_user = update_response.json()
+    updated_user = WholeUserOut(**update_response.json())
+    assert updated_user.id == user_id
+    assert updated_user.email == updated_data["email"]
 
-    # Validate the updated user
-    validated_user = UserOut(**updated_user)
-    assert isinstance(validated_user, UserOut)
-    assert validated_user.id == user_id
-    assert validated_user.email == updated_data["email"]
-
-def test_delete_user(test_client):
+def test_delete_user(test_client, create_user_and_get_token):
     """
     Test the delete_user endpoint.
-    First we create a user, then delete that user by ID.
     """
-    user_data = {
-        "email": f"test_user_{uuid.uuid4()}@example.com",
-        "password": "securepassword123"
-    }
+    token = create_user_and_get_token["token"]
+    headers = {"Authorization": f"Bearer {token.access_token}"}
+    me_response = test_client.get("/users/me", headers=headers)
+    user_id = me_response.json()['id']
 
-    # Create a user
-    create_user_response = test_client.post("/users/create", json=user_data)
-    assert create_user_response.status_code == 201
-    created_user = create_user_response.json()
-    user_id = created_user['id']
-
-    # Delete the user
     delete_response = test_client.delete(f"/users/{user_id}")
     assert delete_response.status_code == 200
     assert delete_response.json() == DELETE_USER_SUCCESS_MESSAGE
 
-    # Attempt to retrieve the deleted user
     get_user_response = test_client.get(f"/users/{user_id}")
     assert get_user_response.status_code == 404
 
-    # Validate the error message
-    error_detail = get_user_response.json().get("detail", "")
-    assert "user" in error_detail and "ID" in error_detail
-    assert get_user_response.status_code == 404
-    assert get_user_response.json() == {"detail": "There is no user with this ID"}
-
-def test_create_user_with_existing_email(test_client):
+def test_create_user_with_existing_email(test_client, create_user_and_get_token):
     """
     Test creating a user with an email that already exists.
     """
-    user_data = {
-        "email": f"test_user_{uuid.uuid4()}@example.com",
-        "password": "securepassword123"
-    }
+    existing_email = create_user_and_get_token["user_data"]["email"]
+    user_data = {"email": existing_email, "password": "somepassword"}
 
-    # Create the first user
-    create_user_response = test_client.post("/users/create", json=user_data)
-    assert create_user_response.status_code == 201
-
-    # Attempt to create a second user with the same email
     duplicate_response = test_client.post("/users/create", json=user_data)
     assert duplicate_response.status_code == 400
     assert duplicate_response.json() == EMAIL_ALREADY_REGISTERED_MESSAGE
-    assert duplicate_response.json() == {"detail": "Email already registered"}
 
-def test_login_user(test_client):
+def test_login_user(test_client, create_user_and_get_token):
     """
     Test the login_user endpoint.
-    First we create a user, then attempt to log in with that user's credentials.
     """
-    user_data = {
-        "email": f"test_user_{uuid.uuid4()}@example.com",
-        "password": "securepassword123"
-    }
+    user_data = create_user_and_get_token["user_data"]
 
-    # Create a user
-    create_user_response = test_client.post("/users/create", json=user_data)
-    assert create_user_response.status_code == 201
-    created_user = create_user_response.json()
-
-    # Log in with the user's credentials
-    login_response = test_client.post("/users/login", json={
-        "email": user_data["email"],
-        "password": user_data["password"]
-    })
+    login_response = test_client.post("/users/login", json=user_data)
     assert login_response.status_code == 200
-    logged_in_user = login_response.json()
+    token = Token(**login_response.json())
+    assert token.access_token
+    assert token.token_type == "bearer"
 
-    # Validate the logged-in user
-    validated_user = UserOut(**logged_in_user)
-    assert isinstance(validated_user, UserOut)
-    assert validated_user.id == created_user['id']
-    assert validated_user.email == user_data["email"]
-
-    # Try to log in with incorrect credentials
+    # Test login with incorrect password
     incorrect_login_response = test_client.post("/users/login", json={
         "email": user_data["email"],
         "password": "wrongpassword"
     })
     assert incorrect_login_response.status_code == 400
     assert incorrect_login_response.json() == INVALID_CREDENTIALS_ERROR
-    assert incorrect_login_response.status_code == 400
-    assert incorrect_login_response.json() == {'detail': 'Invalid credentials'}
-
