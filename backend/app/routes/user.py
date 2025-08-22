@@ -72,7 +72,7 @@ def create_user(
         value=access_token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
         expires=(datetime.now(timezone.utc) + access_token_expires),
         path="/",
     )
@@ -140,7 +140,7 @@ def login_user(
         value=access_token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
         max_age=int(access_token_expires.total_seconds()),
         path="/",
     )
