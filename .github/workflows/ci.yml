@@ -9,15 +9,22 @@ on:
 
 # This section defines the jobs that will be executed.
 jobs:
+  # This is the first job, for running backend tests.
   backend-tests:
     # Use the latest version of Ubuntu as the operating system for the runner.
     runs-on: ubuntu-latest
+    # Set environment variables required by the backend tests.
+    env:
+      SECRET_KEY: "a_test_secret_key_that_is_long_enough"
+      ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      DATABASE_URL: "sqlite:///:memory:" # Use an in-memory database for tests
     defaults:
       run:
         # Set the default working directory for all steps in this job.
         working-directory: ./backend
     steps:
-    # Step 1: Check out repository code so the workflow can access it.
+    # Step 1: Check out your repository code so the workflow can access it.
     - name: Check out code
       uses: actions/checkout@v3
 
@@ -27,7 +34,7 @@ jobs:
       with:
         python-version: '3.9' # Specify the Python version you are using.
 
-    # Step 3: Install the backend dependencies from requirements.txt file.
+    # Step 3: Install the backend dependencies from your requirements.txt file.
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -37,7 +44,7 @@ jobs:
     - name: Run tests with pytest
       run: pytest
 
-  # This is the second job, for running frontend tests.
+  # This is the second job, for running frontend tests. It will run in parallel with the backend job.
   frontend-tests:
     # Use the latest version of Ubuntu.
     runs-on: ubuntu-latest
@@ -54,7 +61,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16' 
+        node-version: '20' # UPDATED: Use a more recent LTS version of Node.js.
 
     # Step 3: Install the frontend dependencies.
     - name: Install dependencies
