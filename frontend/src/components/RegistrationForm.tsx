@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import API_URL from '../apiConfig';
 
 const RegistrationForm = () => {
     const navigate = useNavigate();
@@ -85,7 +86,7 @@ const RegistrationForm = () => {
             // Call the API endpoint to register the user
             // Pass the lowercase email to the API
             const response = await axios.post(
-                "http://localhost:8000/users/create",
+                `${API_URL}/users/create`,
                 {
                     email: formData.email.toLowerCase(),
                     password: formData.password,

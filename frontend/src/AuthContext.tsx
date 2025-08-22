@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import API_URL from "./apiConfig";
 
 // types
 import type { User } from "./types/User";
@@ -44,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (!isAuthenticated) return;
         try {
             const response = await axios.get(
-                "http://localhost:8000/notifications/",
+                `${API_URL}/notifications/`,
                 {
                     withCredentials: true,
                 }
@@ -60,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             try {
                 // Try to fetch current user data using the cookie
                 const response = await axios.get(
-                    "http://localhost:8000/users/me",
+                    `${API_URL}/users/me`,
                     {
                         withCredentials: true,
                     }
@@ -92,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         try {
             // 1. Send login credentials to the backend
             await axios.post(
-                "http://localhost:8000/users/login",
+                `${API_URL}/users/login`,
                 {
                     email,
                     password,
@@ -104,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
             // 2. After a successful login, fetch the user's details
             const userResponse = await axios.get(
-                "http://localhost:8000/users/me",
+                `${API_URL}/users/me`,
                 { withCredentials: true }
             );
 
@@ -127,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const logout = async () => {
         try {
             await axios.post(
-                "http://localhost:8000/users/logout",
+                `${API_URL}/users/logout`,
                 {},
                 { withCredentials: true }
             );
@@ -145,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const markAsRead = async (notificationId: number) => {
         try {
             await axios.patch(
-                `http://localhost:8000/notifications/${notificationId}/update_read`,
+                `${API_URL}/notifications/${notificationId}/update_read`,
                 { new_is_read: true },
                 { withCredentials: true }
             );
@@ -158,7 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const markAsUnread = async (notificationId: number) => {
         try {
             await axios.patch(
-                `http://localhost:8000/notifications/${notificationId}/update_read`,
+                `${API_URL}/notifications/${notificationId}/update_read`,
                 { new_is_read: false },
                 { withCredentials: true }
             );

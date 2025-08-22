@@ -4,6 +4,7 @@ import PriceHistorySearch from "../components/PriceHistorySearch";
 import PriceHistoryResults from "../components/PriceHistoryResults";
 import type { PriceHistoryItem } from "../types/PriceHistory";
 import axios from "axios";
+import API_URL from "../apiConfig";
 
 const PriceHistoryPage = () => {
     // Get the logged in user. This is needed to render user/admin specific fields
@@ -45,7 +46,7 @@ const PriceHistoryPage = () => {
 
         try {
             // API call to get the products from the price history endpoint
-            const response = await axios.get("http://localhost:8000/price-history/search-price-history", {
+            const response = await axios.get(`${API_URL}/price-history/search-price-history`, {
                 params: {
                     product_id: productId,
                     name: productName,
