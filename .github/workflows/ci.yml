@@ -70,3 +70,13 @@ jobs:
     # Step 4: Run the frontend tests using the "test" script from your package.json.
     - name: Run tests with Vitest
       run: npm test
+
+  deploy:
+    runs-on: ubuntu-latest
+    # This job will only run if both backend-tests and frontend-tests succeed
+    needs: [backend-tests, frontend-tests]
+    # This condition ensures that the deploy only happens on pushes to the main branch
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+    - name: Trigger Netlify Deploy
+      run: curl -X POST -d '{}' ${{ secrets.NETLIFY_BUILD_HOOK }}
