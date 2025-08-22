@@ -2,9 +2,16 @@
 
 *Your personal price tracking assistant.*
 
+[![Run Tests](https://github.com/KishanYern/PricePulse/actions/workflows/ci.yml/badge.svg)](https://github.com/KishanYern/PricePulse/actions/workflows/ci.yml)
+[![Deployed on Netlify](https://img.shields.io/badge/Deployed%20on-Netlify-brightgreen)](https://trackyourproduct.netlify.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 PricePulse is a full-stack web application that allows you to track product prices from your favorite online stores. Simply add a product URL, and PricePulse will monitor it for you, keeping a history of its price changes. This way, you can make sure you're always getting the best deal.
+
+## ✨ Live Demo
+
+You can check out the live version of the application here:
+**[https://trackyourproduct.netlify.app/](https://trackyourproduct.netlify.app/)**
 
 ## 🚀 Key Features
 
@@ -13,7 +20,7 @@ PricePulse is a full-stack web application that allows you to track product pric
 - **Advanced Price Analytics:** Visualize price trends with an interactive chart that displays the entire price history of a product. The application automatically tracks the current, lowest, and highest prices.
 - **Personalized Tracking:** Customize your tracking experience by adding personal notes to each product.
 - **Smart Alerts & Notifications:** Set upper and lower price thresholds for your tracked products and receive notifications when the price hits your desired target.
-- **Scheduled Price Checks:** The application automatically checks for price updates every six hours, ensuring you always have the most current information.
+- **Scheduled Price Checks:** The application automatically checks for price updates daily, ensuring you always have the most current information.
 - **Admin Dashboard:** A dedicated interface for administrators to view and manage all products in the system.
 - **Modern, Responsive UI:** A clean, user-friendly interface built with React and Tailwind CSS, ensuring a seamless experience on any device.
 
@@ -31,7 +38,7 @@ PricePulse is a full-stack web application that allows you to track product pric
 1.  **Register and Log In:** Create a secure account to get started.
 2.  **Add a Product:** Find a product you want to track on your favorite e-commerce site, copy the URL, and paste it into the "Add Product" form in PricePulse.
 3.  **Customize Tracking (Optional):** Add personal notes, set a lower or upper price threshold, and decide if you want to receive notifications.
-4.  **Monitor Prices:** PricePulse will automatically check the product's price every six hours and record any changes.
+4.  **Monitor Prices:** PricePulse will automatically check the product's price daily and record any changes.
 5.  **View Price History:** Visit the product's page in your dashboard to see a detailed chart of its price history over time.
 6.  **Get Notified:** If you've enabled notifications and the price drops below your lower threshold or rises above your upper threshold, you'll receive an alert.
 
@@ -69,6 +76,26 @@ This level of customization ensures you only get the alerts that matter most to 
 | **Axios** | A promise-based HTTP client for making API requests. |
 | **React Router DOM** | A standard library for routing in React applications. |
 | **React Icons** | A library that provides a wide range of popular icons as React components. |
+
+## 🚀 Deployment & CI/CD
+
+### Deployment
+
+The application is deployed with a modern, decoupled architecture:
+
+-   **Frontend:** The React application is hosted on **Netlify**, providing a fast and reliable user experience.
+-   **Backend:** The FastAPI backend and the database are deployed on **Render**, ensuring a scalable and secure infrastructure.
+-   **Scheduled Tasks:** The daily product price updates are also handled by a scheduled worker on **Render**.
+
+### CI/CD
+
+We use **GitHub Actions** for our Continuous Integration and Continuous Deployment pipeline. Here’s how it works:
+
+-   **On every push** to the `main` branch, the workflow is triggered.
+-   **Automated Tests:** It automatically runs the complete test suite for both the backend (using `pytest`) and the frontend (using `vitest`).
+-   **Continuous Deployment:** If all tests pass, the frontend is automatically deployed to Netlify.
+
+This setup ensures that the code is always in a deployable state and that new changes are integrated smoothly.
 
 ## 🏁 Getting Started
 
@@ -138,7 +165,7 @@ Before running the application, you need to set up the environment variables for
 
 ## 🕒 Scheduled Tasks
 
-PricePulse includes a background task that automatically updates the prices of all tracked products every 6 hours. This ensures that the price data stays current without requiring manual intervention. The scheduler is automatically started when you run the backend server.
+PricePulse includes a background task that automatically updates the prices of all tracked products **daily**. This ensures that the price data stays current without requiring manual intervention. When deployed, this task is managed by a scheduled worker on **Render**.
 
 ## 🗺️ Roadmap
 
