@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_URL from '../apiConfig';
 import { useAuth } from '../AuthContext';
 import type { User } from '../types/User';
 
@@ -18,7 +19,7 @@ const SendNotificationModal: React.FC<SendNotificationModalProps> = ({ onClose }
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/users/', { withCredentials: true });
+        const response = await axios.get(`${API_URL}/users/`, { withCredentials: true });
         setUsers(response.data);
       } catch (err) {
         setError('Failed to fetch users.');
@@ -46,7 +47,7 @@ const SendNotificationModal: React.FC<SendNotificationModalProps> = ({ onClose }
 
     try {
       await axios.post(
-        'http://localhost:8000/notifications/create_notification',
+        `${API_URL}/notifications/create_notification`,
         {
           from_user_id: currentUser.id,
           user_id: selectedUserId,

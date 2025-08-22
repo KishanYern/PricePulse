@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import type { Product } from "../types/Product";
+import API_URL from '../apiConfig';
 
 interface AddProductProps {
     onProductAdded: (newProduct: Product) => void;
@@ -25,7 +26,7 @@ export const AddProduct = ({ onProductAdded }: AddProductProps) => {
         try {
             // Call the server to validate and add the product
             const response = await axios.post(
-                "http://localhost:8000/products/create-product",
+                `${API_URL}/products/create-product`,
                 {
                     "product": {
                         url,

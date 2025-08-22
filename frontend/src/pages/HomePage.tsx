@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../apiConfig";
 import { useAuth } from "../AuthContext";
 import { AddProduct } from "../components/AddProduct";
 import ProductCard from "../components/ProductCard";
@@ -47,7 +48,7 @@ const Home: React.FC = () => {
             setIsLoadingProducts(true);
             try {
                 const response = await axios.get(
-                    `http://localhost:8000/products/${userHomePage}/user-products`,
+                    `${API_URL}/products/${userHomePage}/user-products`,
                     { withCredentials: true }
                 );
                 setProducts(Array.isArray(response.data) ? response.data : []);
@@ -70,7 +71,7 @@ const Home: React.FC = () => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await axios.get("http://localhost:8000/users", {
+                const response = await axios.get(`${API_URL}/users`, {
                     withCredentials: true,
                 });
                 setUsers(Array.isArray(response.data) ? response.data : []);

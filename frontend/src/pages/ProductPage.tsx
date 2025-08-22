@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../apiConfig";
 import { FaArrowLeft, FaShoppingCart, FaChartLine, FaExclamationCircle } from "react-icons/fa";
 import { MdImageNotSupported } from "react-icons/md";
 
@@ -28,7 +29,7 @@ const ProductPage: React.FC = () => {
         const fetchPriceHistory = async () => {
             setIsLoadingChart(true);
             try {
-                const response = await axios.get(`http://localhost:8000/price-history/search-price-history`, {
+                const response = await axios.get(`${API_URL}/price-history/search-price-history`, {
                     params: { product_id: productId },
                     withCredentials: true,
                 });
@@ -49,7 +50,7 @@ const ProductPage: React.FC = () => {
         const fetchProduct = async () => {
             setIsLoading(true);
             try {
-                const response = await axios.get(`http://localhost:8000/products/${productId}`, {
+                const response = await axios.get(`${API_URL}/products/${productId}`, {
                     withCredentials: true,
                 });
                 setProduct(response.data);
