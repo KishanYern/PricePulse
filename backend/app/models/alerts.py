@@ -2,6 +2,7 @@ from app.database import Base
 from sqlalchemy import DateTime, ForeignKey, Enum, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
+from typing import Union
 import enum
 
 class AlertType(enum.Enum):
@@ -14,7 +15,7 @@ class Alert(Base):
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     target_price: Mapped[float] = mapped_column(nullable=True) # If the user set a price (lower/upper threshold), this would be the value that crossed
-    alert_type: Mapped[AlertType | None] = mapped_column(Enum(AlertType), nullable=True)
+    alert_type: Mapped[Union[AlertType, None]] = mapped_column(Enum(AlertType), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         insert_default=func.now(),
