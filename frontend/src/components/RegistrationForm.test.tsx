@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '../utils/test-utils';
+import { render, screen } from '../utils/test-utils';
 import userEvent from '@testing-library/user-event';
 import axios from 'axios';
 import RegistrationForm from './RegistrationForm';

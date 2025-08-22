@@ -4,13 +4,6 @@ import { MemoryRouter } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
 import type { AuthContextType } from "../AuthContext";
 
-// Mock implementation of the User type
-interface User {
-    id: number;
-    email: string;
-    admin: boolean;
-}
-
 // Default mock state for the AuthContext
 const defaultMockAuth: AuthContextType = {
     isAuthenticated: false,

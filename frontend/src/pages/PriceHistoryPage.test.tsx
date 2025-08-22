@@ -43,7 +43,7 @@ describe('PriceHistoryPage', () => {
     });
 
     it('performs a search and displays results', async () => {
-        render(<PriceHistoryPage />, { mockAuth: { user: { admin: false } }});
+        render(<PriceHistoryPage />, { mockAuth: { user: { id: 2, email: 'user@example.com', admin: false } } });
 
         const nameInput = screen.getByLabelText(/product name/i);
         const searchButton = screen.getByRole('button', { name: /search/i });
@@ -128,12 +128,12 @@ describe('PriceHistoryPage for non-admin users', () => {
     });
 
     it('does not show the user filter', () => {
-        render(<PriceHistoryPage />, { mockAuth: { user: { admin: false } } });
+        render(<PriceHistoryPage />, { mockAuth: { user: { id: 1, email: 'user@test.com', admin: false } } });
         expect(screen.queryByLabelText(/user filter/i)).not.toBeInTheDocument();
     });
 
     it('does not show the user email column in results', async () => {
-        render(<PriceHistoryPage />, { mockAuth: { user: { admin: false } } });
+        render(<PriceHistoryPage />, { mockAuth: { user: { id: 1, email: 'user@test.com', admin: false } } });
 
         const searchButton = screen.getByRole('button', { name: /search/i });
         await userEvent.click(searchButton);
@@ -158,12 +158,12 @@ describe('PriceHistoryPage for admin users', () => {
     });
 
     it('shows the user filter', async () => {
-        render(<PriceHistoryPage />, { mockAuth: { user: { admin: true } } });
+        render(<PriceHistoryPage />, { mockAuth: { user: { id: 1, email: 'admin@example.com', admin: true } } });
         expect(await screen.findByLabelText(/user filter/i)).toBeInTheDocument();
     });
 
     it('shows the user email column in results', async () => {
-        render(<PriceHistoryPage />, { mockAuth: { user: { admin: true } } });
+        render(<PriceHistoryPage />, { mockAuth: { user: { id: 1, email: 'admin@example.com', admin: true } } });
 
         const searchButton = screen.getByRole('button', { name: /search/i });
         await userEvent.click(searchButton);

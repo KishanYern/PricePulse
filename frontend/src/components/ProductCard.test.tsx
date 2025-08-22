@@ -38,7 +38,7 @@ describe('ProductCard', () => {
     });
 
     it('should show a placeholder if imageUrl is not provided', () => {
-        const productWithoutImage = { ...mockProduct, imageUrl: undefined };
+        const productWithoutImage = { ...mockProduct, imageUrl: null }; 
         render(<ProductCard product={productWithoutImage} />);
         expect(screen.getByTestId('image-placeholder')).toBeInTheDocument();
     });
@@ -65,7 +65,7 @@ describe('ProductCard', () => {
         });
 
         it('should show an equals sign when lowest or highest price is not available', () => {
-            const productWithoutPrices = { ...mockProduct, lowestPrice: undefined, highestPrice: undefined };
+            const productWithoutPrices = { ...mockProduct, lowestPrice: null, highestPrice: null };
             render(<ProductCard product={productWithoutPrices} />);
             const priceIndicator = screen.getByTestId('price-indicator-equal');
             expect(priceIndicator).toBeInTheDocument();
