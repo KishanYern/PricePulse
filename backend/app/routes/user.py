@@ -6,7 +6,7 @@ from app.models import User
 from app.schemas.user import UserCreate, UserOut, WholeUserOut, Token
 from app.utils import hash_password, verify_password
 from app.auth import create_access_token, get_current_user
-from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from app.config import ACCESS_TOKEN_EXPIRE_MINUTES, FRONTEND_DOMAIN
 
 router = APIRouter(
     prefix="/users",
@@ -75,6 +75,7 @@ def create_user(
         samesite="none",
         expires=(datetime.now(timezone.utc) + access_token_expires),
         path="/",
+        domain=FRONTEND_DOMAIN
     )
 
     return Token(access_token=access_token, token_type="bearer") # Return the token
@@ -143,6 +144,7 @@ def login_user(
         samesite="none",
         max_age=int(access_token_expires.total_seconds()),
         path="/",
+        domain=FRONTEND_DOMAIN
     )
 
     # Update last login time

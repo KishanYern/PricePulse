@@ -18,3 +18,5 @@ IPROYAL_PROXY_PASSWORD = os.getenv("IPROYAL_PROXY_PASSWORD")
 ALLOWED_CORS_ORIGINS = [
     origin.strip() for origin in ALLOWED_CORS_ORIGINS_STR.split(',') if origin.strip()
 ]
+
+FRONTEND_DOMAIN = os.getenv("FRONTEND_DOMAIN", "http://localhost:5173")
