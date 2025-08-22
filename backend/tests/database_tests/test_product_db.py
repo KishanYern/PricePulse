@@ -11,10 +11,11 @@ def test_create_product(test_db):
     """
     product_data = {
         "name": "Test Product 1",
-       "url": f"http://example.com/product2-{uuid.uuid4()}",
+        "url": f"http://example.com/product2-{uuid.uuid4()}",
         "current_price": 99.99,
         "lowest_price": 50.99,
         "highest_price": 99.99,
+        "source": "Test"
     }
 
     product = Product(**product_data)
@@ -45,7 +46,8 @@ def test_read_product(test_db):
     product_data = {
         "name": "Test Product 2",
         "url": f"http://example.com/product2-{uuid.uuid4()}",
-        "current_price": 150.00
+        "current_price": 150.00,
+        "source": "Test"
     }
     product = Product(**product_data)
     test_db.add(product)
@@ -68,7 +70,8 @@ def test_update_product(test_db):
     product = Product(
         name="Old Name",
         url=f"http://example.com/old_url-{uuid.uuid4()}",
-        current_price=10.00
+        current_price=10.00,
+        source="Test"
     )
     test_db.add(product)
     test_db.commit()
@@ -93,7 +96,8 @@ def test_delete_product(test_db):
     product = Product(
         name="Product to Delete",
         url=f"http://example.com/to_delete-{uuid.uuid4()}",
-        current_price=50.00
+        current_price=50.00,
+        source="Test"
     )
     test_db.add(product)
     test_db.commit()
@@ -116,7 +120,8 @@ def test_unique_url_constraint(test_db):
     product1 = Product(
         name="Product A",
         url=base_url,
-        current_price=100.00
+        current_price=100.00,
+        source="Test"
     )
     test_db.add(product1)
     test_db.commit()
@@ -125,7 +130,8 @@ def test_unique_url_constraint(test_db):
     product2 = Product(
         name="Product B",
         url=base_url, # Duplicate URL
-        current_price=200.00
+        current_price=200.00,
+        source="Test"
     )
     test_db.add(product2)
 
@@ -140,7 +146,8 @@ def test_nullable_fields(test_db):
     product = Product(
         name="Product with Nulls",
         url=f"http://example.com/null_prices-{uuid.uuid4()}",
-        current_price=75.00
+        current_price=75.00,
+        source="Test"
     )
     test_db.add(product)
     test_db.commit()
@@ -157,7 +164,8 @@ def test_cascade_delete(test_db):
     product = Product(
         name="Product for Cascade Test",
         url=f"http://example.com/cascade-{uuid.uuid4()}",
-        current_price=100.00
+        current_price=100.00,
+        source="Test"
     )
     test_db.add(product)
     test_db.commit()
@@ -210,7 +218,8 @@ def test_default_timestamps(test_db):
     product = Product(
         name="Timestamp Test",
         url=f"http://example.com/timestamps-{uuid.uuid4()}",
-        current_price=123.45
+        current_price=123.45,
+        source="Test"
     )
     test_db.add(product)
     test_db.commit()

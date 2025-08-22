@@ -151,7 +151,8 @@ def test_cascade_delete_user_relationships(test_db):
     product = Product(
         name="Product for User Cascade Test",
         url=f"http://example.com/user_cascade_product-{uuid.uuid4()}",
-        current_price=500.00
+        current_price=500.00,
+        source="Test"
     )
     test_db.add(product)
     test_db.commit()
