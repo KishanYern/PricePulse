@@ -12,7 +12,7 @@ import axios from "axios";
 import type { User } from "./types/User";
 import type { Notification } from "./types/Notification";
 
-interface AuthContextType {
+export interface AuthContextType {
     isAuthenticated: boolean;
     user: User | null;
 

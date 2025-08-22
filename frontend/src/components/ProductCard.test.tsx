@@ -12,8 +12,12 @@ const mockProduct: Product = {
     currentPrice: 100,
     highestPrice: 200,
     lowestPrice: 50,
-    lastChecked: new Date().toISOString(),
+    notes: null,
+    lowerThreshold: null,
+    upperThreshold: null,
     notify: false,
+    createdAt: new Date().toISOString(),
+    lastChecked: new Date().toISOString(),
 };
 
 describe('ProductCard', () => {

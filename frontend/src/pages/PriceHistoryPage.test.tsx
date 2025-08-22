@@ -11,10 +11,9 @@ vi.mock('axios');
 const mockedAxios = vi.mocked(axios, true);
 
 const mockHistoryData: PriceHistoryItem[] = [
-    { id: 1, productId: 101, productName: 'Laptop X', price: 1200.50, timestamp: new Date().toISOString(), source: 'Amazon', notifications: true },
-    { id: 2, productId: 102, productName: 'Mouse Y', price: 25.00, timestamp: new Date().toISOString(), source: 'Amazon', notifications: false },
+    { id: 1, userEmail: 'test@example.com', productId: 101, productName: 'Laptop X', price: 1200.50, timestamp: new Date().toISOString(), source: 'Amazon', notifications: true },
+    { id: 2, userEmail: 'test@example.com', productId: 102, productName: 'Mouse Y', price: 25.00, timestamp: new Date().toISOString(), source: 'Amazon', notifications: false },
 ];
-
 const mockUsers = [
     { id: 1, email: 'admin@example.com' },
     { id: 2, email: 'user@example.com' },

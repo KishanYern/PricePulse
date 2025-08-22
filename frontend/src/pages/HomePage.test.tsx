@@ -26,8 +26,8 @@ vi.mock('../components/ProductCard', () => ({
 const mockUser: User = { id: 1, email: 'user@example.com', admin: false };
 const mockAdmin: User = { id: 2, email: 'admin@example.com', admin: true };
 const mockProducts: Product[] = [
-    { id: 1, name: 'Test Product 1', url: 'http://a.com', lastChecked: new Date().toISOString(), currentPrice: 100 },
-    { id: 2, name: 'Test Product 2', url: 'http://b.com', lastChecked: new Date().toISOString(), currentPrice: 200 },
+    { id: 1, name: 'Test Product 1', url: 'http://a.com', currentPrice: 100, lowestPrice: null, highestPrice: null, notes: null, lowerThreshold: null, upperThreshold: null, notify: true, source: 'Amazon', imageUrl: null, createdAt: new Date().toISOString(), lastChecked: new Date().toISOString() },
+    { id: 2, name: 'Test Product 2', url: 'http://b.com', currentPrice: 200, lowestPrice: null, highestPrice: null, notes: null, lowerThreshold: null, upperThreshold: null, notify: true, source: 'eBay', imageUrl: null, createdAt: new Date().toISOString(), lastChecked: new Date().toISOString() },
 ];
 const mockUsers: User[] = [mockUser, mockAdmin];
 

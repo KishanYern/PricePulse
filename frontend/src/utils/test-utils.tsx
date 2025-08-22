@@ -1,7 +1,8 @@
 import React, { ReactElement } from "react";
 import { render, RenderOptions } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { AuthContext, AuthState } from "../AuthContext";
+import { AuthContext } from "../AuthContext";
+import type { AuthContextType } from "../AuthContext";
 
 // Mock implementation of the User type
 interface User {
@@ -11,13 +12,17 @@ interface User {
 }
 
 // Default mock state for the AuthContext
-const defaultMockAuth: AuthState = {
+const defaultMockAuth: AuthContextType = {
     isAuthenticated: false,
     user: null,
     isAdmin: false,
     isLoading: false,
     login: async () => ({ id: 1, email: "test@example.com", admin: false }),
     logout: () => {},
+    notifications: [],
+    fetchNotifications: () => {},
+    markAsRead: () => {},
+    markAsUnread: () => {},
 };
 
 // Create a custom render function that includes providers
@@ -30,7 +35,7 @@ const renderWithProviders = (
         initialEntries = ['/'],
         ...renderOptions
     }: {
-        mockAuth?: Partial<AuthState>;
+        mockAuth?: Partial<AuthContextType>;
         initialEntries?: string[];
     } & Omit<RenderOptions, "wrapper"> = {}
 ) => {
