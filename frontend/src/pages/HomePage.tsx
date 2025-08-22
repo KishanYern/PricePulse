@@ -17,7 +17,7 @@ import { TfiShoppingCart } from "react-icons/tfi";
 
 const Home: React.FC = () => {
     const { isAuthenticated, user, isLoading } = useAuth();
-    const [userHomePage, setUserHomePage] = useState<number>(0);
+    const [userHomePage, setUserHomePage] = useState<number | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoadingProducts, setIsLoadingProducts] = useState(true);
     const [users, setUsers] = useState<User[]>([]);
@@ -36,14 +36,12 @@ const Home: React.FC = () => {
         else {
             setUserHomePage(user.id);
         }
-    }, [user]);
+    }, [user, isLoading]);
 
     // Fetch the user products
     useEffect(() => {
         const fetchData = async () => {
-            if (isLoading || !user) return;
-
-            if (!user.admin && userHomePage === 0) return;
+            if (userHomePage === null) return;
 
             setIsLoadingProducts(true);
             try {
@@ -60,12 +58,8 @@ const Home: React.FC = () => {
             }
         };
 
-        if (isAuthenticated && user && !isLoading) {
-            fetchData();
-        } else if (!isLoading) {
-            setIsLoadingProducts(false);
-        }
-    }, [isAuthenticated, user, isLoading, userHomePage]);
+        fetchData();
+    }, [userHomePage]);
 
     // Fetch all users for admin management
     useEffect(() => {
@@ -143,7 +137,7 @@ const Home: React.FC = () => {
                                 Add New Product
                             </button>
                             {user?.admin && (
-                                <select className="select select-bordered" onChange={handleUserManagementChange} value={userHomePage}>
+                                <select className="select select-bordered" onChange={handleUserManagementChange} value={userHomePage ?? 0}>
                                     <option key={0} value={0}>
                                         All Products
                                     </option>
