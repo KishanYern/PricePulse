@@ -179,7 +179,7 @@ def get_user_products(user_id: int, db: Session = Depends(get_db), current_user:
     return output_products
 
 @router.post('/create-product', status_code=status.HTTP_201_CREATED, response_model=ProductOut)
-def create_product(user_product_data: UserCreateProduct, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def create_product(user_product_data: UserCreateProduct, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Create a new product associated with the authenticated user.
     """
@@ -188,7 +188,8 @@ def create_product(user_product_data: UserCreateProduct, db: Session = Depends(g
     # All database operations within this block will be committed or rolled back together.
     try:
         #Create the base Product and PriceHistory
-        product_result = _create_product_internal(user_product_data.product, db)
+        product_result = await _create_product_internal(user_product_data.product, db)
+        print(product_result)
 
         # Return cases
         if isinstance(product_result, tuple) and product_result[0] is ProductStatus.PRODUCT_EXISTS:
