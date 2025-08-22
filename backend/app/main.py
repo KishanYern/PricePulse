@@ -35,10 +35,11 @@ async def lifespan(app: FastAPI):
     else:
         print("Skipping database table creation during test environment startup (handled by pytest fixtures).")
 
-    # Start the background scheduler
-    print("Starting background scheduler...")
-    scheduler.add_job(update_product_prices_job, "cron", hour='*/6', id="update_product_prices_job")
-    scheduler.start()
+    # # # Scheduled tasks only on testing. Actual task is hosted on railway.
+    # # Start the background scheduler
+    # print("Starting background scheduler...")
+    # scheduler.add_job(update_product_prices_job, "cron", hour='*/6', id="update_product_prices_job")
+    # scheduler.start()
     
     yield
 
