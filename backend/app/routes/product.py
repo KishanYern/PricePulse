@@ -20,7 +20,7 @@ router = APIRouter(
 )
 
 # Helper function to create a product
-def _create_product_internal(product_data: ProductCreate, db: Session) -> Product | tuple[ProductStatus, Product] | ProductStatus:
+async def _create_product_internal(product_data: ProductCreate, db: Session) -> Product | tuple[ProductStatus, Product] | ProductStatus:
     """
     Internal helper function to create a new product and its initial price history.
     Does not handle user association or HTTP exceptions directly.
@@ -37,7 +37,7 @@ def _create_product_internal(product_data: ProductCreate, db: Session) -> Produc
         return (ProductStatus.PRODUCT_EXISTS, existing_product)
 
     # Call the web scraping function to get the product details
-    scraped_data = scrape_product_data(str(product_data.url), str(product_data.source))
+    scraped_data = await scrape_product_data(str(product_data.url), str(product_data.source))
     if not scraped_data:
         return ProductStatus.PRODUCT_SCRAPER_FAILED
 
@@ -246,7 +246,7 @@ def create_product(user_product_data: UserCreateProduct, db: Session = Depends(g
 
 
 @router.put('/{product_id}', response_model=ProductOut)
-def update_product(product_id: int, product: ProductCreate, db: Session = Depends(get_db)):
+async def update_product(product_id: int, product: ProductCreate, db: Session = Depends(get_db)):
     """
     Update an existing product.
 
@@ -258,7 +258,7 @@ def update_product(product_id: int, product: ProductCreate, db: Session = Depend
     existing_product.url = str(product.url)
 
     # Call the web scraping function to update the product details
-    scraped_data = scrape_product_data(str(product.url), str(product.source))
+    scraped_data = await scrape_product_data(str(product.url), str(product.source))
     if not scraped_data:
         raise HTTPException(status_code=400, detail="Failed to retrieve updated product details")
     
