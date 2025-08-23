@@ -19,42 +19,59 @@ const PriceHistoryResults: React.FC<PriceHistoryResultsProps> = ({
         return <div className="p-6 text-center text-gray-400">No results.</div>;
     }
 
-    return (
-        <div className="mt-8" data-testid="price-history-results">
-            <div className="overflow-x-auto">
-                <div className="flex text-white font-semibold border-b border-gray-700 pb-2 mb-2 min-w-max">
-                    <div className="flex-1 px-2">Id</div>
-                    {isAdmin && <div className="flex-2 px-2">User Email</div>}
-                    <div className="flex-1 px-2">ProductId</div>
-                    <div className="flex-3 px-2">Name</div>
-                    <div className="flex-1 px-2">Price</div>
-                    <div className="flex-2 px-2">Timestamp</div>
-                    <div className="flex-1 px-2">Source</div>
-                    <div className="flex-1 px-2">Notifications</div>
-                </div>
+    const formatTimestamp = (timestamp: string) => {
+        return new Date(timestamp).toLocaleString();
+    };
 
-                {data.map((item, index) => (
-                    <div
-                        key={index}
-                        className="flex text-gray-300 py-2 border-b border-gray-700 hover:bg-gray-600 last:border-b-0 min-w-max"
-                    >
-                        <div className="flex-1 px-2">{item.id}</div>
-                        {isAdmin && (
-                            <div className="flex-2 px-2">{item.userEmail}</div>
-                        )}
-                        <div className="flex-1 px-2">{item.productId}</div>
-                        <div className="flex-3 px-2">{item.productName}</div>
-                        <div className="flex-1 px-2">
-                            ${item.price.toFixed(2)}
-                        </div>
-                        <div className="flex-2 px-2">{item.timestamp}</div>
-                        <div className="flex-1 px-2">{item.source}</div>
-                        <div className="flex-1 px-2">
-                            {item.notifications ? "Enabled" : "Disabled"}
-                        </div>
-                    </div>
-                ))}
-            </div>
+    return (
+        <div
+            className="mt-8 overflow-x-auto"
+            data-testid="price-history-results"
+        >
+            <table className="min-w-full table-auto border-collapse text-left">
+                {/* Table Head */}
+                <thead className="bg-gray-800 text-white font-semibold">
+                    <tr>
+                        <th className="p-3">Id</th>
+                        {isAdmin && <th className="p-3">User Email</th>}
+                        <th className="p-3">ProductId</th>
+                        <th className="p-3">Name</th>
+                        <th className="p-3 text-right">Price</th>
+                        <th className="p-3">Timestamp</th>
+                        <th className="p-3">Source</th>
+                        <th className="p-3">Notifications</th>
+                    </tr>
+                </thead>
+
+                {/* Table Body */}
+                <tbody className="text-gray-300">
+                    {data.map((item, index) => (
+                        <tr
+                            key={index}
+                            className="border-b border-gray-700 hover:bg-gray-800/50"
+                        >
+                            <td className="p-3">{item.id}</td>
+                            {isAdmin && (
+                                <td className="p-3 truncate max-w-xs">
+                                    {item.userEmail}
+                                </td>
+                            )}
+                            <td className="p-3">{item.productId}</td>
+                            <td className="p-3">{item.productName}</td>
+                            <td className="p-3 text-right">
+                                ${item.price.toFixed(2)}
+                            </td>
+                            <td className="p-3">
+                                {formatTimestamp(item.timestamp)}
+                            </td>
+                            <td className="p-3">{item.source}</td>
+                            <td className="p-3">
+                                {item.notifications ? "Enabled" : "Disabled"}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 };
