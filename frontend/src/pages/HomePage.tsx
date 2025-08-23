@@ -25,6 +25,12 @@ const Home: React.FC = () => {
     // State for the modal
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            setIsLoadingProducts(false);
+        }
+    }, [isLoading, isAuthenticated]);
+
     // Initialize the user home page
     useEffect(() => {
         if (!user) {
@@ -130,6 +136,7 @@ const Home: React.FC = () => {
                         </div>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                             <button
+                                type="button"
                                 className="btn btn-primary btn-md shadow-lg"
                                 onClick={() => setIsModalOpen(true)}
                             >

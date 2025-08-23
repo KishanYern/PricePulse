@@ -48,9 +48,9 @@ describe('HomePage', () => {
         expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
     });
 
-    it('should prompt to log in if the user is not authenticated', () => {
-        render(<Home />, { mockAuth: { isAuthenticated: false, user: null } });
-        expect(screen.getByText('Please log in to view and track your products.')).toBeInTheDocument();
+    it('should prompt to log in if the user is not authenticated', async () => {
+        render(<Home />, { mockAuth: { isAuthenticated: false, user: null, isLoading: false } });
+        expect(await screen.findByText('Please log in to view and track your products.')).toBeInTheDocument();
         expect(screen.getByRole('link', { name: /login/i })).toBeInTheDocument();
     });
 
