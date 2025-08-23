@@ -5,7 +5,7 @@ import React, {
     useContext,
     useCallback,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import API_URL from "./apiConfig";
 
@@ -40,6 +40,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const [isLoading, setIsLoading] = useState<boolean>(true); // To indicate auth check is in progress
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const publicPages = ["/login", "/register"];
 
     const fetchNotifications = useCallback(async () => {
         if (!isAuthenticated) return;
@@ -58,6 +61,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     useEffect(() => {
         const checkAuthStatus = async () => {
+            // If we are on a public page, we don't need to check auth status
+            if (publicPages.includes(location.pathname)) {
+                setIsLoading(false);
+                return;
+            }
+
             try {
                 // Check for a valid authentication cookie
                 const response = await axios.get(
