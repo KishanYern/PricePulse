@@ -66,9 +66,14 @@ def _parse_amazon(soup: BeautifulSoup) -> Optional[Dict[str, Any]]:
         price_fraction = price_fraction_element.get_text(strip=True) if price_fraction_element else None
         image_url = image_element.get('data-old-hires') or image_element.get('src') if image_element else None
 
+        current_price = None
+        if price_whole and price_fraction:
+            price_whole_cleaned = price_whole.replace(',', '')
+            current_price = float(f"{price_whole_cleaned}{price_fraction}")
+
         return {
             "name": title,
-            "current_price": float(f"{price_whole}{price_fraction}") if price_whole and price_fraction else None,
+            "current_price": current_price,
             "image_url": image_url,
         }
     except AttributeError:
