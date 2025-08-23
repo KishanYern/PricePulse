@@ -45,9 +45,9 @@ const PriceHistoryResults: React.FC<PriceHistoryResultsProps> = ({
 
                 {/* Table Body */}
                 <tbody className="text-gray-300">
-                    {data.map((item) => (
+                    {data.map((item, index) => (
                         <tr
-                            key={item.id}
+                            key={index}
                             className="border-b border-gray-700 hover:bg-gray-800/50"
                         >
                             <td className="p-3">{item.id}</td>
