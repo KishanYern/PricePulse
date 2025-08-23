@@ -75,7 +75,6 @@ def create_user(
         samesite="none",
         expires=(datetime.now(timezone.utc) + access_token_expires),
         path="/",
-        domain=FRONTEND_DOMAIN
     )
 
     return Token(access_token=access_token, token_type="bearer") # Return the token
@@ -144,7 +143,6 @@ def login_user(
         samesite="none",
         max_age=int(access_token_expires.total_seconds()),
         path="/",
-        domain=FRONTEND_DOMAIN
     )
 
     # Update last login time
