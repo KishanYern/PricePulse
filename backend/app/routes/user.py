@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from app.database import get_db
 from app.models import User
-from app.schemas.user import UserCreate, UserOut, WholeUserOut, Token
+from app.schemas.user import LoginResponse, UserCreate, UserOut, WholeUserOut, Token
 from app.utils import hash_password, verify_password
 from app.auth import create_access_token, get_current_user
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES, FRONTEND_DOMAIN
@@ -110,7 +110,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "User deleted successfully"}
 
-@router.post('/login', response_model=Token) # Use Token schema for response
+@router.post('/login', response_model=LoginResponse) # Use Token schema for response
 def login_user(
     response: Response,
     user_credentials: UserCreate,
@@ -153,7 +153,7 @@ def login_user(
     db.refresh(db_user)
 
     # Return a basic token response (cookie is the primary delivery)
-    return Token(access_token=access_token, token_type="bearer")
+    return {"token": {"access_token": access_token, "token_type": "bearer"}, "user": db_user}
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout(response: Response, current_user: User = Depends(get_current_user)):

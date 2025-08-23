@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const login = async (email: string, password: string): Promise<User> => {
         try {
             // 1. Send login credentials to the backend
-            await axios.post(
+            const response = await axios.post(
                 `${API_URL}/users/login`,
                 {
                     email,
@@ -102,19 +102,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 }
             );
 
-            // 2. After a successful login, fetch the user's details
-            const userResponse = await axios.get(
-                `${API_URL}/users/me`,
-                { withCredentials: true }
-            );
-
-            const userData = userResponse.data;
-
-            // 3. Update the state with the correct user data
+            const userData = response.data.user
             setIsAuthenticated(true);
             setUser(userData);
 
-            // 4. Return the user data object
             return userData;
         } catch (error) {
             console.error("Login failed:", error);

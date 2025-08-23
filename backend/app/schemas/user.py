@@ -30,3 +30,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     id: Optional[int] = None
 
+class LoginResponse(BaseModel):
+    token: Token
+    user: UserOut
+
