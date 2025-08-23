@@ -1,6 +1,6 @@
 import pytest
 import uuid
-from app.schemas.user import UserOut, Token, WholeUserOut
+from app.schemas.user import LoginResponse, UserOut, Token, WholeUserOut
 
 DELETE_USER_SUCCESS_MESSAGE = {"message": "User deleted successfully"}
 INVALID_CREDENTIALS_ERROR = {"detail": "Invalid credentials"}
@@ -121,9 +121,10 @@ def test_login_user(test_client, create_user_and_get_token):
 
     login_response = test_client.post("/users/login", json=user_data)
     assert login_response.status_code == 200
-    token = Token(**login_response.json())
-    assert token.access_token
-    assert token.token_type == "bearer"
+    response = LoginResponse(**login_response.json())
+    assert response.token
+    assert response.token.access_token
+    assert response.token.token_type == "bearer"
 
     # Test login with incorrect password
     incorrect_login_response = test_client.post("/users/login", json={
