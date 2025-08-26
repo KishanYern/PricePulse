@@ -7,6 +7,9 @@ import { FaHome, FaEnvelope, FaEnvelopeOpen } from "react-icons/fa";
 import { AiOutlineHistory } from "react-icons/ai";
 import SendNotificationModal from "./SendNotificationModal";
 
+// Types
+import type { Notification } from "../types/Notification";
+
 const Navbar: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSendModalOpen, setIsSendModalOpen] = useState(false);
@@ -14,7 +17,7 @@ const Navbar: React.FC = () => {
     const sidebarRef = useRef<HTMLDivElement>(null);
     const toggleButtonRef = useRef<HTMLLabelElement>(null);
 
-    const unreadCount = notifications.filter((n) => !n.is_read).length;
+    const unreadCount = notifications.filter((notification) => !notification.is_read).length;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -38,6 +41,14 @@ const Navbar: React.FC = () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [isSidebarOpen]);
+
+    const processNotification = (notification: Notification) => {
+        if (notification.is_read) {
+            markAsUnread(notification.id);
+        } else {
+            markAsRead(notification.id);
+        }
+    };
 
     return (
         <>
@@ -89,13 +100,13 @@ const Navbar: React.FC = () => {
                                             <div className="card-body">
                                                 <span className="font-bold text-lg">{notifications.length} Notifications</span>
                                                 <div className="max-h-64 overflow-y-auto">
-                                                    {notifications.map(n => (
-                                                        <div key={n.id} className={`p-2 rounded-md ${!n.is_read ? 'bg-base-300' : ''}`}>
-                                                            <p className="text-sm">{n.message}</p>
+                                                    {notifications.map(notification => (
+                                                        <div key={notification.id} className={`p-2 rounded-md ${!notification.is_read ? 'bg-base-300' : ''}`}>
+                                                            <p className="text-sm">{notification.message}</p>
                                                             <div className="text-xs text-right mt-1">
-                                                                <button onClick={() => n.is_read ? markAsUnread(n.id) : markAsRead(n.id)} className="link link-hover">
-                                                                    {n.is_read ? <FaEnvelopeOpen className="inline mr-1"/> : <FaEnvelope className="inline mr-1"/>}
-                                                                    {n.is_read ? 'Mark as Unread' : 'Mark as Read'}
+                                                                <button onClick={() => processNotification(notification)} className="link link-hover">
+                                                                    {notification.is_read ? <FaEnvelopeOpen className="inline mr-1"/> : <FaEnvelope className="inline mr-1"/>}
+                                                                    {notification.is_read ? 'Mark as Unread' : 'Mark as Read'}
                                                                 </button>
                                                             </div>
                                                         </div>
