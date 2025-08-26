@@ -10,22 +10,28 @@ vi.mock("axios");
 const mockedAxios = vi.mocked(axios, true);
 
 // Mock data
-const mockUser: User = {
+const mockUser1: User = {
     id: 1,
     email: "test@example.com",
     admin: false,
 };
+const mockUser2: User = {
+    id: 2,
+    email: "test2@example.com",
+    admin: false,
+};
 
 const mockAdmin: User = {
-    id: 2,
+    id: 3,
     email: "admin@example.com",
     admin: true,
 };
 
-const mockUsers: User[] = [mockUser, mockAdmin];
+const mockUsers: User[] = [mockUser1, mockAdmin];
 
 describe("SendNotificationModal", () => {
     const onClose = vi.fn();
+    const modalRef = { current: null };
 
     beforeEach(() => {
         mockedAxios.get.mockReset();
@@ -35,8 +41,8 @@ describe("SendNotificationModal", () => {
 
     it("should render correctly", async () => {
         mockedAxios.get.mockResolvedValue({ data: mockUsers });
-        render(<SendNotificationModal onClose={onClose} />, { mockAuth: { isAuthenticated: true, user: mockUser } });
-        
+        render(<SendNotificationModal onClose={onClose} modalRef={modalRef} />, { mockAuth: { isAuthenticated: true, user: mockUser1 } });
+
         // Use findBy queries, which automatically wait for the element to appear
         expect(await screen.findByText("Send a Notification")).toBeInTheDocument();
         expect(screen.getByLabelText(/recipient/i)).toBeInTheDocument();
@@ -45,7 +51,7 @@ describe("SendNotificationModal", () => {
 
     it("should fetch users on mount", async () => {
         mockedAxios.get.mockResolvedValue({ data: mockUsers });
-        render(<SendNotificationModal onClose={onClose} />, { mockAuth: { isAuthenticated: true, user: mockUser } });
+        render(<SendNotificationModal onClose={onClose} modalRef={modalRef} />, { mockAuth: { isAuthenticated: true, user: mockUser2 } });
         await waitFor(() => {
             expect(mockedAxios.get).toHaveBeenCalledWith(`http://localhost:8000/users/`, { withCredentials: true });
         });
@@ -65,7 +71,7 @@ describe("SendNotificationModal", () => {
         const user = userEvent.setup();
         mockedAxios.get.mockResolvedValue({ data: mockUsers });
         mockedAxios.post.mockResolvedValue({ data: { message: "Success" } });
-        render(<SendNotificationModal onClose={onClose} />, { mockAuth: { isAuthenticated: true, user: mockUser } });
+        render(<SendNotificationModal onClose={onClose} modalRef={modalRef} />, { mockAuth: { isAuthenticated: true, user: mockUser1 } });
         // ACT: Wait for the component to finish loading users
         const recipientSelect = await screen.findByLabelText(/recipient/i);
         const messageInput = screen.getByLabelText(/message/i);
@@ -81,7 +87,7 @@ describe("SendNotificationModal", () => {
             expect(mockedAxios.post).toHaveBeenCalledWith(
                 `http://localhost:8000/notifications/create_notification`, 
                 {
-                    from_user_id: mockUser.id,
+                    from_user_id: mockUser1.id,
                     user_id: mockAdmin.id,
                     message: "Hello World",
                 },
@@ -91,7 +97,7 @@ describe("SendNotificationModal", () => {
     });
 
     it("close button should close the modal", async () => {
-        render(<SendNotificationModal onClose={onClose} />, { mockAuth: { isAuthenticated: true, user: mockUser } });
+        render(<SendNotificationModal onClose={onClose} modalRef={modalRef} />, { mockAuth: { isAuthenticated: true, user: mockUser1 } });
         await userEvent.click(screen.getByRole("button", { name: /close/i }));
         expect(onClose).toHaveBeenCalled();
     });
