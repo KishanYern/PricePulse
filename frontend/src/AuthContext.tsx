@@ -145,11 +145,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const markAsRead = async (notificationId: number) => {
         try {
             await axios.patch(
-                `${API_URL}/notifications/${notificationId}/update_read`,
-                { new_is_read: true },
+                `${API_URL}/notifications/${notificationId}/update_read?new_is_read=true`,
+                null,
                 { withCredentials: true }
             );
-            fetchNotifications();
+            setNotifications(prevNotifications => 
+                prevNotifications.map(notification =>
+                    notification.id === notificationId 
+                        ? { ...notification, is_read: true } // Create a new object for the updated notification
+                        : notification
+                )
+            );
         } catch (error) {
             console.error("Failed to mark notification as read:", error);
         }
@@ -158,11 +164,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const markAsUnread = async (notificationId: number) => {
         try {
             await axios.patch(
-                `${API_URL}/notifications/${notificationId}/update_read`,
-                { new_is_read: false },
+                `${API_URL}/notifications/${notificationId}/update_read?new_is_read=false`,
+                null,
                 { withCredentials: true }
             );
-            fetchNotifications();
+            setNotifications(prevNotifications => 
+                prevNotifications.map(notification =>
+                    notification.id === notificationId 
+                        ? { ...notification, is_read: false } // Create a new object for the updated notification
+                        : notification
+                )
+            );
         } catch (error) {
             console.error("Failed to mark notification as unread:", error);
         }

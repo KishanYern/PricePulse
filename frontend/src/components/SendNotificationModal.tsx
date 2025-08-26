@@ -6,10 +6,12 @@ import type { User } from "../types/User";
 
 interface SendNotificationModalProps {
     onClose: () => void;
+    modalRef: React.RefObject<HTMLDivElement | null>;
 }
 
 const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
     onClose,
+    modalRef
 }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [selectedUserId, setSelectedUserId] = useState<number | "">("");
@@ -24,13 +26,13 @@ const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
                 const response = await axios.get(`${API_URL}/users/`, {
                     withCredentials: true,
                 });
-                setUsers(response.data);
+                setUsers(response.data.filter( (user: User) => user.id !== currentUser?.id ));
             } catch (err) {
                 setError("Failed to fetch users.");
             }
         };
         fetchUsers();
-    }, []);
+    }, [currentUser]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,11 +45,6 @@ const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
             setError(
                 "You must be logged in to send notifications. Try reloading the page."
             );
-            return;
-        }
-
-        if (currentUser.id === selectedUserId) {
-            setError("You cannot send a notification to yourself.");
             return;
         }
 
@@ -71,7 +68,7 @@ const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
     };
 
     return (
-        <div className="modal-box">
+        <div className="modal-box" ref={modalRef}>
             <h3 className="font-bold text-lg">Send a Notification</h3>
             <form onSubmit={handleSubmit}>
                 <div className="form-control">
@@ -109,10 +106,10 @@ const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
                     ></textarea>
                 </div>
                 <div className="modal-action">
-                    <button type="button" className="btn" onClick={onClose}>
+                    <button type="button" className="btn" onClick={onClose} id="close-notification-btn">
                         Close
                     </button>
-                    <button type="submit" className="btn btn-primary">
+                    <button type="submit" className="btn btn-primary" id="send-notification-btn">
                         Send
                     </button>
                 </div>
