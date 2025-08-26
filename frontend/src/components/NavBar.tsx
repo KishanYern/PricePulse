@@ -16,6 +16,7 @@ const Navbar: React.FC = () => {
     const { user, logout, notifications, markAsRead, markAsUnread } = useAuth();
     const sidebarRef = useRef<HTMLDivElement>(null);
     const toggleButtonRef = useRef<HTMLLabelElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
 
     const unreadCount = notifications.filter((notification) => !notification.is_read).length;
 
@@ -41,6 +42,28 @@ const Navbar: React.FC = () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [isSidebarOpen]);
+
+    useEffect(() => {
+        const handleModalClickOutside = (event: MouseEvent) => {
+            // Check if the click occurred outside the modalRef and not on the button that opens the modal
+            if (
+                isSendModalOpen &&
+                modalRef.current &&
+                !modalRef.current.contains(event.target as Node) &&
+                event.target !== document.getElementById('send-notification-btn')
+            ) {
+                setIsSendModalOpen(false);
+            }
+        };
+
+        if (isSendModalOpen) {
+            document.addEventListener("mousedown", handleModalClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener("mousedown", handleModalClickOutside);
+        };
+    }, [isSendModalOpen]);
 
     const processNotification = (notification: Notification) => {
         if (notification.is_read) {
@@ -113,7 +136,13 @@ const Navbar: React.FC = () => {
                                                     ))}
                                                 </div>
                                                 <div className="card-actions">
-                                                    <button className="btn btn-primary btn-block" onClick={() => setIsSendModalOpen(true)}>Send Notification</button>
+                                                    <button 
+                                                        className="btn btn-primary btn-block" 
+                                                        onClick={() => setIsSendModalOpen(true)}
+                                                        id="send-notification-btn"
+                                                    >
+                                                        Send Notification
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -162,7 +191,7 @@ const Navbar: React.FC = () => {
             </div>
             {isSendModalOpen && (
                 <div className="modal modal-open">
-                    <SendNotificationModal onClose={() => setIsSendModalOpen(false)} />
+                    <SendNotificationModal onClose={() => setIsSendModalOpen(false)} modalRef={modalRef} />
                 </div>
             )}
         </>
